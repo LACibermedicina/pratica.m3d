@@ -1,0 +1,1675 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>pratica.M3D — Treino OSCE / Revalida</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root{
+  --teal:#0d9488; --teal2:#14b8a6; --teal3:#5eead4; --deep:#0f766e;
+  --coral:#fb7185; --amber:#fbbf24; --violet:#8b5cf6; --sky:#38bdf8; --lime:#a3e635;
+  --bg:#f0fdfa; --panel:#ffffff; --ink:#134e4a; --mut:#5b7d78; --line:#ccfbf1;
+  --cm:#38bdf8; --cir:#fb7185; --go:#c084fc; --ped:#a3e635; --mfc:#fbbf24;
+  --shadow:0 10px 30px rgba(13,148,136,.12); --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100vh;font-family:ui-rounded,'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--ink);
+  background:linear-gradient(135deg,#ecfeff 0%,#f0fdfa 35%,#fef3c7 70%,#fdf2f8 100%);background-attachment:fixed}
+button{cursor:pointer;border:none;border-radius:14px;padding:10px 18px;font-weight:800;font:inherit;font-size:14px;color:#fff;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));box-shadow:0 4px 14px rgba(13,148,136,.25);transition:transform .18s,box-shadow .18s}
+button:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 22px rgba(13,148,136,.35)}
+button:active{transform:scale(.97)}
+button.coral{background:linear-gradient(135deg,#f43f5e,var(--coral))}
+button.amber{background:linear-gradient(135deg,#f59e0b,var(--amber));color:#451a03}
+button.violet{background:linear-gradient(135deg,#7c3aed,var(--violet))}
+button.sky{background:linear-gradient(135deg,#0284c7,var(--sky))}
+button.ghost{background:#fff;color:var(--teal);border:2px solid var(--teal3);box-shadow:none}
+button.ghost:hover{border-color:var(--teal)}
+button.danger{background:linear-gradient(135deg,#dc2626,#f87171)}
+input,textarea{background:#fff;color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:10px 14px;font:inherit;width:100%;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus{outline:none;border-color:var(--teal2);box-shadow:0 0 0 4px rgba(20,184,166,.15)}
+textarea{min-height:90px;resize:vertical}
+.hidden{display:none !important}
+.small{font-size:12px;color:var(--mut)}
+h2{font-size:22px;margin:0 0 14px}
+hr{border:0;border-top:2px dashed var(--line);margin:16px 0}
+.bubbles{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bubbles i{position:absolute;border-radius:50%;opacity:.35;animation:float 14s infinite ease-in-out}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-60px) rotate(20deg)}}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#fff}
+.badge.CM{background:var(--cm)}.badge.CIR{background:var(--cir)}.badge.GO{background:var(--go)}
+.badge.PED{background:#65a30d}.badge.MFC{background:#d97706}
+#authScreen{min-height:100vh;display:grid;place-items:center;position:relative;z-index:1;padding:16px}
+.auth-card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border:2px solid var(--line);border-radius:26px;padding:30px;width:min(440px,94vw);box-shadow:var(--shadow);animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.auth-tabs{display:flex;gap:8px;margin-bottom:16px}
+.auth-tabs button{flex:1;background:#ccfbf1;color:var(--deep);box-shadow:none}
+.auth-tabs button.active{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff}
+.auth-card h1{margin:0 0 6px;font-size:24px}
+.auth-card p.sub{color:var(--mut);margin:0 0 16px;font-size:13px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--deep);margin-bottom:5px}
+.boxpick{display:flex;gap:8px;flex-wrap:wrap}
+.boxpick .bx{border:2px solid var(--line);background:#fff;border-radius:14px;padding:9px 14px;font-weight:700;font-size:13px;color:var(--mut);cursor:pointer;transition:all .2s;user-select:none;display:flex;align-items:center;gap:6px}
+.boxpick .bx:hover{transform:translateY(-2px);border-color:var(--teal3)}
+.boxpick .bx.sel{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(13,148,136,.3);animation:wiggle .3s}
+@keyframes wiggle{25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
+.boxpick .bx .dot{width:10px;height:10px;border-radius:50%}
+#app{display:none;min-height:100vh;position:relative;z-index:1}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border-bottom:2px solid var(--line);position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;color:var(--deep)}
+.brand .m3d{color:var(--teal)}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.nav button{background:transparent;color:var(--mut);box-shadow:none;padding:8px 14px;border-radius:12px}
+.nav button.active{color:#fff;background:linear-gradient(135deg,var(--teal),var(--teal2))}
+.nav button:hover{transform:translateY(-2px)}
+.user-box{display:flex;align-items:center;gap:10px;font-size:13px}
+.user-box .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--coral));display:grid;place-items:center;font-weight:900;color:#fff;animation:breathe 3s infinite}
+@keyframes breathe{50%{transform:scale(1.08)}}
+.view{padding:20px;max-width:1400px;margin:0 auto;animation:fadein .4s}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}}
+.grid{display:grid;gap:14px}
+.cards{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);transition:transform .2s}
+.card:hover{transform:translateY(-3px)}
+.card h3{margin:0 0 6px;font-size:15px}
+.card .meta{font-size:12px;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.card .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:6px;flex-wrap:wrap}
+.card .area-bar{height:6px;margin:-16px -16px 12px;border-radius:var(--r) var(--r) 0 0}
+.card .area-bar.CM{background:var(--cm)}.card .area-bar.CIR{background:var(--cir)}
+.card .area-bar.GO{background:var(--go)}.card .area-bar.PED{background:var(--ped)}
+.card .area-bar.MFC{background:var(--mfc)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi .v{font-size:28px;font-weight:900}
+.kpi .l{font-size:12px;color:var(--mut);font-weight:700}
+.kpi::after{content:'';position:absolute;right:-20px;top:-20px;width:70px;height:70px;border-radius:50%;opacity:.15;background:var(--teal)}
+.kpi:nth-child(2)::after{background:var(--coral)}.kpi:nth-child(3)::after{background:var(--amber)}.kpi:nth-child(4)::after{background:var(--violet)}
+.dash2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-bottom:14px}
+@media(max-width:1000px){.dash2{grid-template-columns:1fr}}
+.chartbox{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.bar-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.bar-row .bl{width:46px;font-weight:900;font-size:12px}
+.bar-row .track{flex:1;height:18px;background:#f0fdfa;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.bar-row .fill{height:100%;border-radius:999px;width:0;transition:width 1.2s cubic-bezier(.34,1.3,.64,1)}
+.bar-row .pv{width:52px;text-align:right;font-weight:800;font-size:12px}
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.donut{transform:rotate(-90deg)}
+.donut circle{transition:stroke-dasharray 1.2s ease}
+.user-chip{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--line);background:#fff;padding:6px 12px 6px 6px;border-radius:999px;font-size:13px;font-weight:700;margin:4px}
+.user-chip .uav{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:12px}
+.user-chip .on{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:breathe 2s infinite}
+.user-chip .off{width:9px;height:9px;border-radius:50%;background:#cbd5e1}
+.room-card{border:2px solid var(--line);border-radius:var(--r);padding:14px;background:#fff;box-shadow:var(--shadow);position:relative}
+.room-card.live{border-color:var(--teal2);animation:glow 2.5s infinite}
+@keyframes glow{50%{box-shadow:0 0 0 5px rgba(20,184,166,.18)}}
+.room-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.room-head b{font-size:15px}
+.room-tag{font-size:10px;font-weight:900;padding:3px 9px;border-radius:999px;color:#fff;letter-spacing:.5px}
+.room-tag.open{background:var(--teal2)}.room-tag.closed{background:var(--coral)}.room-tag.ia{background:var(--violet)}
+.station-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+@media(max-width:1050px){.station-wrap{grid-template-columns:1fr}}
+.scenario{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:18px;max-height:70vh;overflow:auto;box-shadow:var(--shadow)}
+.sidepanel{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.timer{font-variant-numeric:tabular-nums;font-size:42px;font-weight:900;text-align:center;padding:12px;border-radius:16px;background:linear-gradient(135deg,#f0fdfa,#ecfeff);border:2px solid var(--line);color:var(--deep)}
+.timer.warn{color:#d97706;border-color:var(--amber)}
+.timer.danger{color:#dc2626;border-color:var(--coral);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.checklist{margin-top:12px;max-height:38vh;overflow:auto}
+.ck-item{display:flex;gap:8px;padding:9px;border-bottom:2px dashed var(--line);align-items:flex-start;border-radius:10px;transition:background .2s}
+.ck-item .pts{min-width:48px;text-align:right;font-weight:800;color:var(--mut);font-size:12px}
+.ck-item .ck-txt{flex:1;font-size:13px}
+.ck-item .ck-acts{display:flex;gap:5px}
+.ck-item .ck-acts button{padding:5px 10px;border-radius:9px;font-size:12px}
+.ck-item.done{background:rgba(163,230,53,.25)}
+.ck-item.miss{background:rgba(251,113,133,.18)}
+.score-bar{height:12px;background:#f0fdfa;border:2px solid var(--line);border-radius:999px;overflow:hidden;margin-top:10px}
+.score-bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--lime),var(--teal2),var(--sky));width:0;transition:width .6s cubic-bezier(.34,1.3,.64,1)}
+.chat{display:flex;flex-direction:column;height:280px;background:#f8fffe;border:2px solid var(--line);border-radius:14px}
+.chat .msgs{flex:1;overflow:auto;padding:10px;font-size:13px;display:flex;flex-direction:column;gap:5px}
+.chat .msg{padding:6px 12px;border-radius:14px;max-width:85%;animation:msgin .25s;word-break:break-word}
+@keyframes msgin{from{opacity:0;transform:translateY(8px)}}
+.chat .msg.me{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat .msg.them{background:#fff;border:2px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.chat .msg .who{font-size:10px;font-weight:900;opacity:.75;display:block}
+.chat .inp{display:flex;gap:6px;padding:8px;border-top:2px solid var(--line)}
+.chat .inp button{padding:8px 14px}
+.chat .inp input{flex:1}
+.modal-bg{position:fixed;inset:0;background:rgba(15,118,110,.35);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:100;padding:16px;animation:fadein .25s}
+.modal{background:#fff;border:2px solid var(--line);border-radius:24px;width:min(760px,100%);max-height:92vh;overflow:auto;padding:22px;box-shadow:0 30px 80px rgba(13,148,136,.3);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.modal h2{margin-top:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.row{grid-template-columns:1fr}}
+.role-pill{padding:4px 12px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.5px}
+.role-pill.chefe{background:#fef3c7;color:#92400e}
+.role-pill.esp{background:#e0f2fe;color:#075769}
+.role-pill.medico{background:#ccfbf1;color:var(--deep)}
+.role-pill.ator{background:#fce7f3;color:#be185d}
+.role-pill.admin{background:#ede9fe;color:#6d21a8}
+.role-pill.root{background:#fef3c7;color:#92400e}
+.ia-panel{background:#f8fffe;border:2px solid var(--line);border-radius:14px;padding:12px;max-height:320px;overflow:auto;font-size:13px;white-space:pre-wrap}
+.toast{position:fixed;bottom:20px;right:20px;background:#fff;border:2px solid var(--teal2);color:var(--deep);font-weight:700;padding:12px 18px;border-radius:16px;z-index:300;max-width:400px;box-shadow:var(--shadow);animation:msgin .3s}
+.toast.err{border-color:var(--coral);color:#be123c}
+.toast.ok{border-color:var(--lime);color:#3f6212}
+code.key{background:#f0fdfa;border:1px solid var(--line);padding:2px 8px;border-radius:7px;font-size:12px;color:var(--deep)}
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;max-height:220px;overflow:auto;padding:4px}
+.member-card{border:2px solid var(--line);border-radius:14px;padding:10px;background:#fff;cursor:pointer;text-align:center;font-weight:700;font-size:13px;transition:all .2s}
+.member-card:hover{transform:translateY(-2px);border-color:var(--teal3)}
+.member-card.sel{background:linear-gradient(135deg,#ccfbf1,#a7f3d0);border-color:var(--teal);animation:wiggle .3s}
+#tourOverlay{position:fixed;inset:0;z-index:500}
+#tourHole{position:absolute;border-radius:16px;box-shadow:0 0 0 9999px rgba(15,23,42,.55),0 0 0 4px var(--amber);transition:all .45s cubic-bezier(.34,1.3,.64,1);animation:holepulse 2s infinite}
+@keyframes holepulse{50%{box-shadow:0 0 0 9999px rgba(15,23,42,.55),0 0 0 8px rgba(251,191,36,.6)}}
+#tourCard{position:absolute;background:#fff;border:2px solid var(--amber);border-radius:20px;padding:18px;width:min(340px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.35);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+#tourCard h3{margin:0 0 6px;color:var(--deep)}
+#tourCard .tstep{font-size:11px;font-weight:900;color:#d97706;letter-spacing:1px}
+#tourCard p{font-size:13px;color:var(--mut);margin:0 0 12px}
+#tourCard .tbtns{display:flex;gap:8px;justify-content:flex-end}
+.logo-anim{animation:logofloat 4s ease-in-out infinite}
+@keyframes logofloat{50%{transform:translateY(-3px) rotate(-2deg)}}
+/* ---- v2: revisão / RTC / cards / emoji ---- */
+.rev-box{border:2px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:#fff}
+.rev-box h4{margin:0 0 6px;font-size:14px}
+.rev-box.ok{border-color:#a3e635;background:#f7fee7}
+.rev-box.bad{border-color:#fda4af;background:#fff1f2}
+.rev-box.tip{border-color:#fcd34d;background:#fffbeb}
+.rev-box ul{margin:0;padding-left:18px;font-size:13px}
+.rev-table{width:100%;border-collapse:collapse}
+.rev-table td{border:1px solid var(--line);padding:6px;font-size:12px;vertical-align:top}
+.ai-toggle.on{animation:pulse 1.6s infinite}
+.rtc-panel{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:10px;margin-bottom:12px}
+.rtc-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;color:var(--deep);margin-bottom:8px;flex-wrap:wrap}
+.rtc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.rtc-tile{position:relative;background:#0f172a;border-radius:12px;overflow:hidden;aspect-ratio:4/3;border:2px solid var(--line)}
+.rtc-tile video{width:100%;height:100%;object-fit:cover;display:block}
+.rtc-tile .lb{position:absolute;left:6px;bottom:6px;background:rgba(15,118,110,.85);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
+.rtc-tile.local{order:-1;border-color:var(--teal2)}
+.rtc-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.rtc-bar button{padding:7px 11px;font-size:12px}
+.card-chip{border:2px solid var(--line);border-left:6px solid var(--violet);border-radius:12px;padding:8px 10px;margin:6px 0;background:#faf5ff;font-size:13px;animation:msgin .25s}
+.big-emo{font-size:30px;line-height:1}
+.msg.react{background:transparent;border:none;padding:2px 8px}
+#emojiPick{position:fixed;right:18px;bottom:78px;background:#fff;border:2px solid var(--teal2);border-radius:18px;padding:12px;width:min(330px,92vw);z-index:400;box-shadow:0 20px 60px rgba(13,148,136,.35);animation:pop .25s}
+#emojiPick .eg{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:180px;overflow:auto}
+#emojiPick .eg span{font-size:22px;cursor:pointer;text-align:center;padding:3px;border-radius:8px;transition:transform .15s}
+#emojiPick .eg span:hover{transform:scale(1.3);background:#f0fdfa}
+#emojiPick .rr{display:flex;gap:6px;border-top:2px dashed var(--line);margin-top:8px;padding-top:8px}
+#emojiPick .rr span{font-size:22px;cursor:pointer;transition:transform .15s}
+#emojiPick .rr span:hover{transform:scale(1.35)}
+.sum-sec{border:2px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:#fff}
+.sum-sec h4{margin:0 0 6px;font-size:14px;color:var(--deep)}
+</style>
+</head>
+<body>
+<div class="bubbles" id="bubbles"></div>
+<!-- ================= AUTH ================= -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="brand" style="margin-bottom:16px;justify-content:center"><span id="logoAuth"></span><div>pratica.<span class="m3d">M3D</span></div></div>
+    <div class="auth-tabs">
+      <button data-tab="login" class="active">Login</button>
+      <button data-tab="register">Cadastro</button>
+      <button data-tab="forgot">Esqueci a senha</button>
+    </div>
+    <div id="tab-login">
+      <h1>Entrar 👋</h1>
+      <p class="sub">Treine estações Revalida/OSCE em grupo ou com IA — agora com servidor Node.js em tempo real.</p>
+      <div class="field"><label>E-mail / usuário</label><input type="text" id="loginEmail" placeholder="voce@exemplo.com"/></div>
+      <div class="field"><label>Senha</label><input type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button style="width:100%" onclick="doLogin()">Entrar ➜</button>
+      <p class="small" style="margin-top:10px">A conta <b>root</b> é reservada ao administrador do sistema e cadastra novos administradores.</p>
+    </div>
+    <div id="tab-register" class="hidden">
+      <h1>Criar conta ✨</h1>
+      <p class="sub">Gratuito — seus dados ficam salvos no servidor (SQLite).</p>
+      <div class="field"><label>Nome</label><input id="regName"/></div>
+      <div class="field"><label>E-mail</label><input type="email" id="regEmail"/></div>
+      <div class="field"><label>Senha</label><input type="password" id="regPass"/></div>
+      <button class="amber" style="width:100%" onclick="doRegister()">Cadastrar 🎉</button>
+    </div>
+    <div id="tab-forgot" class="hidden">
+      <h1>Recuperar senha 🔑</h1>
+      <div class="field"><label>E-mail</label><input type="email" id="forgEmail"/></div>
+      <button class="coral" style="width:100%" onclick="doForgot()">Gerar token</button>
+      <div id="forgotMsg" class="small" style="margin-top:10px"></div>
+      <hr/>
+      <div class="field"><label>Token</label><input id="resetToken"/></div>
+      <div class="field"><label>Nova senha</label><input type="password" id="resetPass"/></div>
+      <button style="width:100%" onclick="doReset()">Redefinir ✅</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span id="logoTop"></span><div>pratica.<span class="m3d">M3D</span></div></div>
+    <div class="nav">
+      <button data-view="dashboard" class="active">📊 Dashboard</button>
+      <button data-view="estacoes">📚 Estações</button>
+      <button data-view="sala">🚪 Sala</button>
+      <button data-view="gestao" data-admin="1" class="hidden">🔒 Gestão</button>
+      <button data-view="config">⚙️ Config</button>
+    </div>
+    <div class="user-box">
+      <span id="sockStatus" class="small" title="Conexão em tempo real">⚪</span>
+      <button class="ghost" style="padding:6px 12px" onclick="startTour()">▶ Tour</button>
+      <span id="roleBadge" class="role-pill medico">Membro</span>
+      <div class="av" id="avatar">U</div>
+      <span id="userName" class="small"></span>
+      <button class="ghost" style="padding:6px 12px" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section class="view" id="view-dashboard">
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="kpiStations">0</div><div class="l">📚 Estações no banco</div></div>
+      <div class="kpi"><div class="v" id="kpiTrainings">0</div><div class="l">🏁 Treinos concluídos</div></div>
+      <div class="kpi"><div class="v" id="kpiAvg">0%</div><div class="l">🎯 Nota média geral</div></div>
+      <div class="kpi"><div class="v" id="kpiRooms">0</div><div class="l">🚪 Salas abertas</div></div>
+    </div>
+    <div class="dash2">
+      <div class="chartbox"><h3 style="margin-top:0">📈 Desempenho por grande área</h3><div id="areaBars"></div></div>
+      <div class="chartbox"><h3 style="margin-top:0">🎯 Desempenho geral</h3>
+        <div class="donut-wrap">
+          <svg class="donut" width="130" height="130" viewBox="0 0 130 130">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#ccfbf1" stroke-width="14"/>
+            <circle id="donutVal" cx="65" cy="65" r="54" fill="none" stroke="url(#g1)" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 340"/>
+          </svg>
+          <div><div id="donutTxt" style="font-size:30px;font-weight:900;color:var(--deep)">0%</div><div class="small">média dos seus treinos</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px" id="dashMid">
+      <div class="chartbox" id="usersCard"><h3 style="margin-top:0">👥 Usuários</h3><div id="usersList"></div></div>
+      <div class="chartbox" id="lobbyCard"><h3 style="margin-top:0">💬 Chat público (lobby)</h3>
+        <div class="chat" style="height:220px"><div class="msgs" id="lobbyMsgs"></div>
+          <div class="inp"><button class="ghost" type="button" onclick="toggleEmoji('lobbyInput')">😀</button><input id="lobbyInput" placeholder="Mensagem para todos..." onkeydown="if(event.key==='Enter')sendChat('lobby')"/><button onclick="sendChat('lobby')">Enviar</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="chartbox" id="roomsCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0">🚪 Salas de Estação</h3>
+        <button onclick="openCreateRoom()">＋ Criar nova sala</button>
+      </div>
+      <div id="myRoomWarn" class="small" style="margin:8px 0"></div>
+      <div class="grid cards" id="roomsList" style="margin-top:10px"></div>
+    </div>
+    <div class="chartbox" style="margin-top:14px"><h3 style="margin-top:0">🕘 Histórico recente</h3><div id="histList"></div></div>
+  </section>
+
+  <!-- ESTAÇÕES (catálogo) -->
+  <section class="view hidden" id="view-estacoes">
+    <h2>📚 Catálogo de estações <span class="small">— checklists padrão INEP</span></h2>
+    <div class="field"><input id="fSearch" placeholder="🔍 Buscar por tema, especialidade ou área..." oninput="renderCatalog()"/></div>
+    <div class="field"><label>Grande área</label><div id="fAreaBP"></div></div>
+    <div class="pill-list" style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap" id="areaStats"></div>
+    <div class="grid cards" id="stationCards"></div>
+  </section>
+
+  <!-- SALA (Estação colaborativa) -->
+  <section class="view hidden" id="view-sala">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <h2 id="roomTitle">Sala</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="roomHdrBtns">
+        <button class="sky" style="padding:6px 12px" onclick="showShareModal()">📤 Compartilhar</button>
+        <button class="violet" style="padding:6px 12px" id="roomInviteBtn" onclick="openInviteModal()">➕ Convidar</button>
+        <span id="roomRoleTag" class="role-pill medico">🩺 Médico(a)</span>
+        <button class="ghost" onclick="leaveRoom()">← Sair da sala</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px"><b>👥 Presentes:</b> <span id="roomParticipants"></span></div>
+    <div class="station-wrap">
+      <div>
+        <div id="roomStationSwitchWrap"></div>
+        <div class="scenario" id="roomScenario"><p class="small">Entre em uma sala pelo Dashboard.</p></div>
+        <div id="roomIAPanel" class="hidden" style="margin-top:12px">
+          <div class="card"><h3 style="margin-top:0">🤖 Paciente / Avaliador IA</h3>
+            <div class="chat" style="height:230px"><div class="msgs" id="roomIAFeed"></div>
+              <div class="inp"><button class="ghost" type="button" onclick="toggleDictation()" title="Ditar por voz">🎙</button><input id="roomIAInput" placeholder="Fale com o paciente IA..." onkeydown="if(event.key==='Enter')sendRoomIA()"/><button onclick="sendRoomIA()">Enviar</button></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+              <button class="ghost" onclick="toggleSpeak()" id="speakBtn">🔊 Voz do paciente: ON</button>
+              <button class="violet" onclick="feedbackIA()">📊 Encerrar &amp; gerar feedback IA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sidepanel">
+        <div id="rtcPanel" class="rtc-panel">
+          <div class="rtc-head">📹 Videochamada da sala <span id="rtcStatus" class="small"></span></div>
+          <div id="rtcGrid" class="rtc-grid"></div>
+          <div class="rtc-bar">
+            <button id="rtcJoinBtn" onclick="rtcJoin()">📹 Entrar</button>
+            <button class="ghost" onclick="rtcMic()" title="Microfone">🎤</button>
+            <button class="ghost" onclick="rtcCam()" title="Câmera">📷</button>
+            <button class="ghost" onclick="rtcScreen()" title="Compartilhar tela">🖥</button>
+            <button class="sky" onclick="openModal('sigModal')" title="Sinalização manual copiar/colar SDP">📋 Sinal manual</button>
+            <button class="danger" onclick="rtcLeave()">🔴 Sair</button>
+          </div>
+        </div>
+        <div id="cardsPanel" class="rtc-panel">
+          <div class="rtc-head">🃏 Cards de auxílio compartilhados
+            <button id="cardSendBtn" class="violet" style="padding:6px 12px;font-size:12px" onclick="openCardModal()">＋ Enviar card</button></div>
+          <div id="cardsList"></div>
+        </div>
+        <div class="timer" id="roomTimer">10:00</div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <button onclick="timerStart('room')">▶ Iniciar</button>
+          <button class="violet ai-toggle" id="aiTog-room" style="padding:8px 12px;font-size:12px" onclick="toggleAI('room')">🤖 Correção IA: OFF</button>
+          <button class="amber" onclick="timerPause('room')">⏸ Pausar</button>
+          <button class="ghost" onclick="timerReset('room')">⟲</button>
+          <button class="ghost" onclick="toggleStudyMode()">📖 Estudo</button>
+        </div>
+        <div class="score-bar"><i id="roomBar"></i></div>
+        <div class="small" id="roomScore">Pontuação: 0 / 0</div>
+        <div class="checklist" id="roomChecklist"></div>
+        <button id="roomFinishBtn" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#65a30d,#a3e635)" onclick="finishStation('room')">✅ Finalizar e salvar</button>
+        <hr/>
+        <strong>💬 Chat da sala</strong>
+        <div class="chat" style="height:200px;margin-top:6px"><div class="msgs" id="roomChatMsgs"></div>
+          <div class="inp"><button class="ghost" type="button" onclick="toggleEmoji('roomChatInput')">😀</button><input id="roomChatInput" placeholder="Só quem está na sala vê..." onkeydown="if(event.key==='Enter')sendChat(state.currentRoom)"/><button onclick="sendChat(state.currentRoom)">Enviar</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GESTÃO (admin) -->
+  <section class="view hidden" id="view-gestao">
+    <h2>🔒 Gestão <span class="small">— somente administradores</span></h2>
+    <div class="card">
+      <h3 style="margin-top:0">📥 Importar Excel INEP (.xlsx)</h3>
+      <p class="small">Formato <code class="key">Estacoes_Revalida_Organizadas</code>: Área, Especialidade, Tema / estação, Identificação INEP, Ano, Edição, marcações e Duração.</p>
+      <input type="file" id="xlsxFile" accept=".xlsx,.xls" onchange="importXlsx(event)"/>
+      <div id="importMsg" class="small" style="margin-top:8px"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0">✨ Criar estação com IA</h3>
+      <p class="small">Checklist no padrão INEP; quando o padrão não cobre o tema, a IA define os elementos mais relevantes ao diagnóstico conforme prática canônica, diretrizes e cobranças recentes do INEP.</p>
+      <div class="field"><label>Área</label><div id="iaAreaBP"></div></div>
+      <div class="field"><label>Tema da estação</label><input id="iaTema" placeholder="Ex.: Dengue grave em adulto"/></div>
+      <div class="field"><label>Instruções adicionais (opcional)</label><textarea id="iaExtra"></textarea></div>
+      <button class="violet" onclick="generateStationIA()">✨ Gerar estação com IA</button>
+      <div id="iaStatus" class="small" style="margin-top:8px"></div>
+      <pre class="ia-panel hidden" id="iaResult"></pre>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0">🛠 Editor manual &amp; banco</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openEditor()">＋ Nova estação em branco</button>
+        <button class="ghost" onclick="exportJSON()">⬇ Exportar (JSON)</button>
+        <button class="ghost" onclick="document.getElementById('jsonImport').click()">⬆ Importar (JSON)</button>
+        <input type="file" id="jsonImport" accept=".json" class="hidden" onchange="importJSON(event)"/>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0">👑 Usuários &amp; administradores</h3>
+      <p class="small">Somente o <b>root</b> promove/revoga administradores. Root e administradores não podem ser excluídos.</p>
+      <div id="adminUsers" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </section>
+
+  <!-- CONFIG -->
+  <section class="view hidden" id="view-config">
+    <h2>⚙️ Configurações</h2>
+    <div class="card">
+      <h3 style="margin-top:0">🤖 IA — cadeia de failsafe (servidor)</h3>
+      <p class="small">Ordem de tentativa: <strong>Gemini</strong> → <strong>OpenAI</strong> → <strong>Pollinations</strong>. As chaves ficam somente no servidor (variáveis de ambiente — veja o README).</p>
+      <button class="sky" onclick="testIA()">🧪 Testar provedores</button>
+      <div id="cfgStatus" class="small" style="margin-top:8px"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin-top:0">👤 Perfil</h3>
+      <div class="field"><label>Nome de exibição</label><input id="cfgName"/></div>
+      <button class="ghost" onclick="saveProfile()">Salvar perfil</button>
+    </div>
+  </section>
+</div>
+
+<!-- ============ MODAL: ESTAÇÃO (treino solo) ============ -->
+<div id="stationModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('stationModal')">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div><span class="badge CM" id="smArea">CM</span><h2 id="smTitle" style="margin:6px 0 0"></h2><div class="small" id="smMeta"></div></div>
+      <button class="ghost" onclick="closeModal('stationModal')">✕</button>
+    </div>
+    <hr/>
+    <div class="station-wrap">
+      <div class="scenario" id="smScenario"></div>
+      <div class="sidepanel">
+        <div class="timer" id="smTimer">10:00</div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <button onclick="timerStart('sm')">▶ Iniciar</button>
+          <button class="violet ai-toggle" id="aiTog-sm" style="padding:8px 12px;font-size:12px" onclick="toggleAI('sm')">🤖 Correção IA: OFF</button>
+          <button class="amber" onclick="timerPause('sm')">⏸</button>
+          <button class="ghost" onclick="timerReset('sm')">⟲</button>
+        </div>
+        <div class="score-bar"><i id="smBar"></i></div>
+        <div class="small" id="smScore">Pontuação: 0 / 0</div>
+        <div class="checklist" id="smChecklist"></div>
+        <button style="width:100%;margin-top:10px;background:linear-gradient(135deg,#65a30d,#a3e635)" onclick="finishStation('sm');">✅ Finalizar e salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: ESCOLHA DE PAPEL ============ -->
+<div id="roleModal" class="modal-bg hidden">
+  <div class="modal" style="text-align:center;max-width:640px">
+    <h2>Qual será sua função nesta Estação? 🎭</h2>
+    <p class="small">Isso define o que você enxerga e suas ferramentas: a folha do ator fica oculta para o médico; o espectador apenas assiste. O roteamento é automático ao entrar.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+      <div class="member-card" style="padding:20px" onclick="pickRole('medico')"><div style="font-size:34px">🩺</div><b>Médico(a)</b><div class="small">Candidato: conduz anamnese, exame e conduta · entra na videochamada</div></div>
+      <div class="member-card" style="padding:20px" onclick="pickRole('ator')"><div style="font-size:34px">🎭</div><b>Avaliador / Ator</b><div class="small">Simula o paciente, pontua o PEP e envia cards de auxílio</div></div>
+      <div class="member-card" style="padding:20px" onclick="pickRole('chefe')"><div style="font-size:34px">👑</div><b>Chefe · colaborativo</b><div class="small">Conduz a sessão, vê todas as folhas e modera cards/videochamada</div></div>
+      <div class="member-card" style="padding:20px" onclick="pickRole('espectador')"><div style="font-size:34px">👀</div><b>Espectador</b><div class="small">Assiste à estação ao vivo em tempo real, sem pontuar</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: CRIAR SALA ============ -->
+<div id="roomModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('roomModal')">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between"><h2>🚪 Criar sala de Estação</h2><button class="ghost" onclick="closeModal('roomModal')">✕</button></div>
+    <div class="field"><label>Nome da sala</label><input id="roomName" placeholder="Ex.: Turma Noturna — GO"/></div>
+    <div class="field"><label>Estação clínica (uma ou mais — obrigatório)</label><div id="roomStationBP" style="max-height:190px;overflow:auto"></div></div>
+    <div class="field"><label>Modo</label><div id="roomModeBP"></div></div>
+    <div class="field"><label>Visibilidade</label><div id="roomVisBP"></div></div>
+    <div class="field hidden" id="roomMembersWrap"><label>Grupo de usuários convidados (🟢 online · toque para selecionar)</label><div class="member-grid" id="roomMembers"></div></div>
+    <p class="small">⚠️ Ao criar uma nova sala, sua sala anterior é encerrada automaticamente (exceto administradores).</p>
+    <button style="width:100%" onclick="createRoom()">Criar e entrar 🎉</button>
+  </div>
+</div>
+
+<!-- ============ MODAL: EDITOR DE ESTAÇÃO ============ -->
+<div id="editModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('editModal')">
+  <div class="modal">
+    <h2>🛠 Editor de estação</h2>
+    <div class="field"><label>Área</label><div id="edAreaBP"></div></div>
+    <div class="row"><div class="field"><label>Especialidade</label><input id="edEsp"/></div>
+    <div class="field"><label>Tema / estação</label><input id="edTema"/></div></div>
+    <div class="row"><div class="field"><label>Ano INEP</label><input id="edAno"/></div>
+    <div class="field"><label>Edição INEP</label><input id="edEdicao" placeholder="Ex.: 2025.1"/></div></div>
+    <div class="row"><div class="field"><label>Procedimento</label><div id="edProcBP"></div></div>
+    <div class="field"><label>Tipo</label><div id="edDidBP"></div></div></div>
+    <div class="field"><label>Duração (min)</label><input type="number" id="edDur" value="10"/></div>
+    <div class="field"><label>Instruções do participante</label><textarea id="edInstr"></textarea></div>
+    <div class="field"><label>Folha do avaliador / ator</label><textarea id="edAval"></textarea></div>
+    <div class="field"><label>Exames complementares</label><textarea id="edExames"></textarea></div>
+    <div class="field"><label>Checklist ("pontos | descrição", um por linha)</label><textarea id="edChk" style="min-height:140px"></textarea></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="saveManual()">💾 Salvar</button>
+      <button class="violet" onclick="enhanceChecklistIA()">✨ Enriquecer checklist com IA</button>
+      <button class="ghost" onclick="closeModal('editModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: CONVITE / COMPARTILHAR ============ -->
+<div id="shareModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('shareModal')">
+  <div class="modal" style="max-width:540px;text-align:center">
+    <h2>📤 Convite da sala</h2>
+    <p class="small">Compartilhe o link — quem receber faz login (ou se cadastra) e entra direto na sala, mesmo nas fechadas.</p>
+    <div class="field"><input id="shareLink" readonly onclick="this.select()"/></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="sky" onclick="copyShareLink()">📋 Copiar link</button>
+      <button id="shareWa" style="background:linear-gradient(135deg,#16a34a,#4ade80)">🟢 WhatsApp</button>
+      <button class="ghost" onclick="closeModal('shareModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: CONVIDAR PARTICIPANTES ============ -->
+<div id="inviteModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('inviteModal')">
+  <div class="modal">
+    <h2>➕ Convidar participantes</h2>
+    <p class="small">🟢 online agora · ⚪ offline — toque para selecionar e agregar à sala.</p>
+    <div class="member-grid" id="inviteMembers"></div>
+    <button style="width:100%;margin-top:12px" onclick="confirmInvite()">Adicionar à sala ✅</button>
+  </div>
+</div>
+
+<!-- ============ MODAL: CARD DE REVISÃO ============ -->
+<div id="reviewModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('reviewModal')">
+  <div class="modal"><h2 style="margin-top:0">🗂 Card de revisão didático</h2><div id="reviewBody"></div></div>
+</div>
+
+<!-- ============ MODAL: SINALIZAÇÃO MANUAL WebRTC ============ -->
+<div id="sigModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('sigModal')">
+  <div class="modal"><h2>📋 Sinalização manual (copiar/colar SDP)</h2>
+    <p class="small">Fallback P2P caso a sinalização Socket.io não conecte: um lado gera a <b>oferta</b>, o outro cola o bloco e devolve a <b>resposta</b> (troque por WhatsApp/e-mail). Aguarde ~4s após gerar para reunir os candidatos ICE.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="manualOffer()">1️⃣ Gerar oferta</button>
+      <button class="violet" onclick="manualHandle()">2️⃣ Processar bloco colado</button>
+      <button class="ghost" onclick="closeModal('sigModal')">Fechar</button>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Cole aqui o bloco recebido (oferta ou resposta)</label><textarea id="sigIn" placeholder="Cole o bloco do colega..."></textarea></div>
+    <div class="field"><label>Seu bloco para enviar ao colega</label><textarea id="sigOut" readonly onclick="this.select()"></textarea></div>
+  </div>
+</div>
+
+<!-- ============ MODAL: ENVIAR CARD ============ -->
+<div id="cardModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('cardModal')">
+  <div class="modal" style="max-width:560px"><h2>🃏 Enviar card de auxílio ao candidato</h2>
+    <p class="small">O card aparece em tempo real para todos na sala (avaliação formativa) e entra no resumo final da sessão.</p>
+    <div class="field"><label>Categoria (modalidade)</label><div id="cardCatBP"></div></div>
+    <div class="field"><label>Texto do card</label><textarea id="cardText" placeholder="Ex.: Pergunte sobre irradiação da dor e fatores de melhora/piora..."></textarea></div>
+    <div style="display:flex;gap:8px"><button class="violet" onclick="sendCard()">Compartilhar na sala 🃏</button>
+    <button class="ghost" onclick="closeModal('cardModal')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- ============ MODAL: RESUMO FINAL ============ -->
+<div id="summaryModal" class="modal-bg hidden" onclick="if(event.target===this)closeModal('summaryModal')">
+  <div class="modal"><h2 style="margin-top:0">📋 Resumo final da sessão</h2><div id="summaryBody"></div></div>
+</div>
+
+<!-- ============ TOUR ============ -->
+<div id="tourOverlay" class="hidden" onclick="if(event.target===this)endTour()">
+  <div id="tourHole"></div>
+  <div id="tourCard" onclick="event.stopPropagation()">
+    <span class="tstep" id="tourStepN">PASSO 1</span>
+    <h3 id="tourTitle"></h3>
+    <p id="tourDesc"></p>
+    <div class="tbtns">
+      <button class="ghost" onclick="endTour()">Pular ✕</button>
+      <button class="amber" id="tourNext" onclick="tourNext()">Próximo ➜</button>
+    </div>
+  </div>
+</div>
+
+<div id="emojiPick" class="hidden"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+/* ================================================================
+   pratica.M3D — Treino OSCE/Revalida colaborativo (v2 Node.js)
+   Frontend SPA: REST (Express) + Socket.io (chat, reações, cards,
+   presença e sinalização WebRTC mesh). IA via proxy no servidor.
+================================================================ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=p=>(p||'id')+'-'+Math.random().toString(36).slice(2,10);
+const ROOT_EMAIL='root';
+
+/* ---------- LOGO SVG (marca M3D) ---------- */
+const LOGO_SVG=`<svg class="logo-anim" viewBox="0 0 120 80" width="46" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<polygon points="8,12 34,34 34,74 8,50" fill="#5eead4"/><polygon points="8,12 34,34 58,14 34,2" fill="#99f6e4" opacity=".9"/>
+<polygon points="34,34 58,14 58,54 34,74" fill="#14b8a6"/><polygon points="58,14 84,36 58,54" fill="#0d9488"/>
+<polygon points="84,36 84,76 58,54" fill="#0f766e"/><polygon points="84,36 112,10 112,52 84,76" fill="#2dd4bf"/>
+<polygon points="84,36 112,10 84,4" fill="#99f6e4" opacity=".85"/></svg>`;
+
+/* ---------- ESTADO ---------- */
+const state={
+  user:null, token:localStorage.getItem('pm3d_token')||null,
+  stations:[], customStations:[], users:[], rooms:[],
+  history:[], currentStation:null, currentRoom:null, myRoomRole:null,
+  studyMode:false, speakOn:true, aiCorrect:{sm:false,room:false},
+  presence:[], roomCards:[]
+};
+const isAdmin=()=>state.user&&(state.user.role==='root'||state.user.role==='admin');
+const isRoot=()=>state.user&&state.user.role==='root';
+const allStations=()=>[...state.stations,...state.customStations];
+const currentRoomObj=()=>state.rooms.find(r=>r.id===state.currentRoom)||null;
+const onlineSet=()=>new Set(state.presence.map(p=>p.email));
+
+/* ---------- TOAST ---------- */
+function toast(msg,type=''){const t=$('toast');t.textContent=msg;t.className='toast '+type;t.classList.remove('hidden');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.add('hidden'),3600);}
+
+/* ---------- API REST ---------- */
+async function api(path,data,method){
+  const r=await fetch('/api/'+path,{method:method||(data?'POST':'GET'),
+    headers:{'Content-Type':'application/json',...(state.token?{'Authorization':'Bearer '+state.token}:{})},
+    body:data?JSON.stringify(data):undefined});
+  const j=await r.json().catch(()=>({error:'HTTP '+r.status}));
+  if(!r.ok){ if(r.status===401&&state.user){ doSessionExpired(); } throw new Error(j.error||('HTTP '+r.status)); }
+  return j;
+}
+function doSessionExpired(){ localStorage.removeItem('pm3d_token'); state.token=null;
+  if(state.user){ state.user=null; toast('Sessão expirada — faça login novamente','err'); setTimeout(()=>location.reload(),1200); } }
+
+/* ---------- SOCKET.IO ---------- */
+let socket=null;
+function connectSocket(){
+  if(socket) socket.disconnect();
+  socket=io({auth:{token:state.token}});
+  socket.on('connect',()=>{ $('sockStatus').textContent='🟢 tempo real'; heartbeat();
+    if(state.currentRoom) socket.emit('room:join',{roomId:state.currentRoom,role:state.myRoomRole}); });
+  socket.on('disconnect',()=>{ $('sockStatus').textContent='🔴 offline'; });
+  socket.on('connect_error',e=>{ $('sockStatus').textContent='🔴 '+(e.message||'erro'); });
+  socket.on('presence',list=>{ state.presence=list; renderUsers(); if(state.currentRoom) renderRoomParticipants(); });
+  socket.on('rooms',list=>{ state.rooms=list; renderRoomList();
+    if(state.currentRoom){ const r=currentRoomObj(); if(!r){ toast('A sala foi encerrada','err'); state.currentRoom=null; gotoView('dashboard'); } } });
+  socket.on('stations:changed',()=>pullStations());
+  socket.on('chat',m=>{ pushChatMsg(m.room,m); });
+  socket.on('react',e=>{ if(e.room===state.currentRoom) pushReaction(e); });
+  socket.on('card',e=>{ if(e.room===state.currentRoom){ if(!state.roomCards.find(c=>c.cid===e.card.cid)) state.roomCards.push(e.card); renderCards(); } });
+  socket.on('signal',s=>handleSig(s));
+  socket.on('room:station',d=>{ if(d.roomId===state.currentRoom){ const r=currentRoomObj(); if(r){ r.stationId=d.stationId; renderRoomView(); toast('Estação ativa alterada por '+d.by,'ok'); } } });
+  socket.on('room:closed',d=>{ if(d.roomId===state.currentRoom){ toast('A sala foi encerrada pelo criador','err'); leaveRoom(true); } });
+  socket.on('room:peer_joined',d=>{ if(d.roomId===state.currentRoom) renderRoomParticipants(); });
+  socket.on('room:peer_left',d=>{ if(d.roomId===state.currentRoom){ dropPeer(d.email); renderRoomParticipants(); } });
+  socket.on('room:presence',d=>{ if(d.roomId===state.currentRoom) renderRoomParticipants(d.online); });
+}
+function heartbeat(){ if(socket?.connected) socket.emit('heartbeat',{room:state.currentRoom,roomRole:state.myRoomRole}); }
+setInterval(heartbeat,8000);
+
+/* ---------- AUTH ---------- */
+async function doRegister(){
+  const name=$('regName').value.trim(), email=$('regEmail').value.trim().toLowerCase(), pass=$('regPass').value;
+  if(!name||!email||!pass) return toast('Preencha todos os campos','err');
+  try{ await api('register',{name,email,pass});
+    toast('Cadastro realizado no servidor! Faça login 🎉','ok');
+    document.querySelector('[data-tab=login]').click();
+  }catch(e){ toast(e.message,'err'); }
+}
+async function doLogin(){
+  const email=$('loginEmail').value.trim().toLowerCase(), pass=$('loginPass').value;
+  try{
+    const j=await api('login',{email,pass});
+    state.token=j.token; localStorage.setItem('pm3d_token',j.token);
+    state.user=j.user; enterApp();
+  }catch(e){ toast(e.message==='credenciais'?'Credenciais inválidas (HTTP 401)':e.message,'err'); }
+}
+async function doForgot(){
+  try{ const j=await api('forgot',{email:$('forgEmail').value.trim().toLowerCase()});
+    $('forgotMsg').innerHTML='Token gerado: <code class="key">'+j.token+'</code> (em produção seria enviado por e-mail)';
+  }catch(e){ toast(e.message,'err'); }
+}
+async function doReset(){
+  try{ await api('reset',{token:$('resetToken').value.trim(),pass:$('resetPass').value});
+    toast('Senha redefinida ✅','ok'); document.querySelector('[data-tab=login]').click();
+  }catch(e){ toast(e.message,'err'); }
+}
+async function logout(){
+  try{ await api('logout'); }catch(e){}
+  localStorage.removeItem('pm3d_token'); rtcLeave(true); if(socket) socket.disconnect();
+  location.reload();
+}
+
+/* ---------- ENTRADA NO APP ---------- */
+async function enterApp(){
+  $('authScreen').style.display='none'; $('app').style.display='block';
+  seedStations();
+  $('userName').textContent=state.user.name;
+  $('avatar').textContent=state.user.name[0].toUpperCase();
+  $('roleBadge').className='role-pill '+(isRoot()?'root':isAdmin()?'admin':'medico');
+  $('roleBadge').textContent=isRoot()?'ROOT':isAdmin()?'ADMIN':'Membro';
+  document.querySelectorAll('.nav button[data-admin]').forEach(b=>b.classList.toggle('hidden',!isAdmin()));
+  $('cfgName').value=state.user.name;
+  boxPick('fAreaBP',[{v:'',l:'Todas as áreas'},{v:'CM',l:'CM',color:'var(--cm)'},{v:'CIR',l:'CIR',color:'var(--cir)'},{v:'GO',l:'GO',color:'var(--go)'},{v:'PED',l:'PED',color:'var(--ped)'},{v:'MFC',l:'MFC',color:'var(--mfc)'}],'',renderCatalog);
+  boxPick('iaAreaBP',[{v:'CM',l:'CM',color:'var(--cm)'},{v:'CIR',l:'CIR',color:'var(--cir)'},{v:'GO',l:'GO',color:'var(--go)'},{v:'PED',l:'PED',color:'var(--ped)'},{v:'MFC',l:'MFC',color:'var(--mfc)'}],'CM');
+  boxPick('edAreaBP',[{v:'CM',l:'CM'},{v:'CIR',l:'CIR'},{v:'GO',l:'GO'},{v:'PED',l:'PED'},{v:'MFC',l:'MFC'}],'CM');
+  boxPick('edProcBP',[{v:'Não marcado',l:'Não procedimento'},{v:'Marcado',l:'🔧 Procedimento'}],'Não marcado');
+  boxPick('edDidBP',[{v:'Não marcada',l:'Regular'},{v:'Marcada',l:'📚 Didática'}],'Não marcada');
+  boxPick('roomModeBP',[{v:'users',l:'👥 Com usuário(s)'},{v:'ia',l:'🤖 Com auxílio de IA'}],'users',renderRoomMembers);
+  boxPick('roomVisBP',[{v:'open',l:'🔓 Aberta (todos entram)'},{v:'closed',l:'🔒 Fechada (grupo selecionado)'}],'open',renderRoomMembers);
+  connectSocket();
+  await Promise.all([pullStations(),pullUsers(),pullHistory()]);
+  const rs=await api('rooms').catch(()=>({rooms:[]})); state.rooms=rs.rooms||[];
+  renderAll();
+  const pend=sessionStorage.getItem('pm3d_join');
+  if(pend){ sessionStorage.removeItem('pm3d_join'); joinRoomByCode(pend); }
+  else checkJoinLink();
+  if(!localStorage.getItem('praticaM3D_toured')) startTour();
+}
+async function pullStations(){ try{ const j=await api('stations'); state.customStations=j.stations||[]; renderCatalog(); renderDashboard(); }catch(e){} }
+async function pullUsers(){ try{ const j=await api('users'); state.users=j.users||[]; state.presence=j.online||[]; renderUsers(); if(isAdmin()) renderAdminUsers(); }catch(e){} }
+async function pullHistory(){ try{ const j=await api('history_list'); state.history=j.history||[]; renderDashboard(); }catch(e){} }
+
+/* ---------- BOXPICK ---------- */
+function boxPick(elId,options,value,onpick){
+  const el=$(elId); el.classList.add('boxpick'); el.dataset.value=value;
+  el.innerHTML=options.map(o=>`<div class="bx ${o.v===value?'sel':''}" data-v="${esc(o.v)}">${o.color?`<span class="dot" style="background:${o.color}"></span>`:''}${esc(o.l)}</div>`).join('');
+  el.querySelectorAll('.bx').forEach(b=>b.onclick=()=>{ el.dataset.value=b.dataset.v;
+    el.querySelectorAll('.bx').forEach(x=>x.classList.toggle('sel',x===b)); onpick&&onpick(b.dataset.v); });
+}
+const bpVal=id=>$(id).dataset.value;
+
+/* ---------- ESTAÇÕES SEED (checklists padrão INEP) ---------- */
+function ineptChk(extra){ return [
+  {pts:1,text:'Apresenta-se ao paciente, identifica-se e verifica identidade do paciente'},
+  {pts:1,text:'Lava as mãos / higieniza antes do contato (segurança do paciente)'},
+  {pts:2,text:'Realiza anamnese dirigida: QP, HDA, antecedentes pessoais/familiares, medicações em uso'},
+  {pts:1,text:'Avalia sinais vitais e estado geral'},
+  {pts:2,text:'Realiza exame físico direcionado e sistematizado'},
+  {pts:1,text:'Solicita exames complementares pertinentes (justificando)'},
+  {pts:2,text:'Formula hipótese diagnóstica correta e diagnósticos diferenciais'},
+  {pts:2,text:'Propõe conduta/tratamento conforme diretrizes vigentes'},
+  {pts:1,text:'Comunica-se em linguagem acessível, verifica entendimento e orienta o paciente'},
+  ...(extra||[]) ]; }
+function seed(area,esp,tema,ident,ano,edicao,proc=false,did=false,extra){
+  return { id:uid('base'),area,especialidade:esp,tema,identificacao:ident,ano,edicao,
+    procedimento:proc?'Marcado':'Não marcado', didatica:did?'Marcada':'Não marcada', duracao:10, access:0,
+    instrucoes:`Você é o(a) médico(a) de plantão. Atenda o caso: ${tema}. Realize anamnese dirigida, exame físico pertinente, hipótese diagnóstica, conduta e orientações em até 10 minutos.`,
+    avaliador:`Ator/avaliador: paciente/responsável com queixa compatível com "${tema}". Responder apenas ao perguntado. Fornecer exames quando solicitados corretamente. Demonstrar ansiedade moderada; colaborar quando acolhido(a).`,
+    exames:'Exames complementares disponíveis mediante solicitação (laboratório, imagem, ECG conforme pertinência).',
+    checklist:ineptChk(extra) };
+}
+function seedStations(){
+  state.stations=[
+    seed('CIR','Cirurgia','Abdome Agudo Hemorrágico por Gravidez Ectópica Rota','Não informada','','',false,false,[{pts:2,text:'Reconhece instabilidade hemodinâmica e inicia reposição volêmica (2 acessos, SF 0,9%)'},{pts:2,text:'Solicita β-hCG e USG transvaginal; aciona cirurgia/GO com urgência'}]),
+    seed('CIR','Cirurgia','Abdome Agudo Obstrutivo — Volvo de Sigmoide','Não informada','','',false,false,[{pts:2,text:'Suspeita de obstrução: distensão, parada de eliminações, vômitos'},{pts:1,text:'Solicita RX de abdome agudo (níveis hidroaéreos, "grão de café")'}]),
+    seed('CM','Clínica Médica','Abscesso Amigdaliano (Peritonsilar)','Não informada','',''),
+    seed('CM','Clínica Médica','Abscesso Pulmonar','Não informada','',''),
+    seed('GO','Ginecologia e Obstetrícia','1ª Consulta de Pré-Natal','Não informada','','',false,false,[{pts:1,text:'Calcula IG e DPP (DUM/Naegele)'},{pts:1,text:'Prescreve ácido fólico e solicita exames do pré-natal (tipagem, Coombs ind., sorologias, Hb, urina)'}]),
+    seed('GO','Ginecologia e Obstetrícia','Aborto Completo','Não informada','',''),
+    seed('PED','Pediatria','Febre sem Sinais Localizatórios','Não informada','','',false,false,[{pts:1,text:'Estratifica risco conforme idade e estado geral (toxemia)'},{pts:1,text:'Conhece conduta por faixa etária (<3 meses: investigação/ internação)'}]),
+    seed('PED','Pediatria','Bronquiolite Viral Aguda','Não informada','','',false,false,[{pts:1,text:'Identifica sinais de gravidade (FR, SpO2, tiragem, apneia)'},{pts:1,text:'Conduta de suporte: O2 se SpO2<92%, hidratação, lavagem nasal — evita antibiótico/salbutamol de rotina'}]),
+    seed('MFC','Medicina de Família','Hipertensão Arterial — Abordagem Inicial','INEP 2024.1','2024','2024.1',false,false,[{pts:1,text:'Confirma PA com técnica adequada e classifica o estágio'},{pts:1,text:'Estratifica risco cardiovascular e inicia MEV'}]),
+    seed('MFC','Medicina de Família','Rastreamento de Câncer Colorretal','INEP 2025.2','2025','2025.2',false,false,[{pts:1,text:'Indica PSOF anual 50–75 anos ou colonoscopia conforme risco'}]),
+    seed('CM','Clínica Médica','Dengue Grave','INEP 2024.2','2024','2024.2',false,false,[{pts:2,text:'Identifica sinais de alarme e classifica grupo (A–D)'},{pts:2,text:'Hidratação conforme grupo; contraindica AAS/AINEs; define retorno/observação'}]),
+    seed('CIR','Cirurgia','Apendicite Aguda','INEP 2025.1','2025','2025.1',true,false,[{pts:1,text:'Exame: Blumberg/Rovsing/psoas; classifica Alvarado'},{pts:1,text:'Solicita USG/TC, jejum, antibiótico e avaliação cirúrgica'}]),
+    seed('GO','Ginecologia e Obstetrícia','Hemorragia Pós-Parto','INEP 2025.2','2025','2025.2',true,false,[{pts:2,text:'Reconhece atonia uterina (causa principal) e inicia massagem uterina + ocitocina'},{pts:2,text:'Escala conduta: TXA, uterotônicos, balão/cirurgia; monitoriza e acessos'}]),
+    seed('PED','Pediatria','Diarreia Aguda com Desidratação','INEP 2024.1','2024','2024.1',false,false,[{pts:2,text:'Classifica desidratação (plano A/B/C da OMS)'},{pts:2,text:'Institui TRO ou expansão EV conforme plano; orienta sinais de alarme'}]),
+    seed('CM','Clínica Médica','IAM com Supra de ST','INEP 2025.1','2025','2025.1',false,false,[{pts:2,text:'Solicita e interpreta ECG em até 10 min; reconhece supra de ST'},{pts:2,text:'Inicia MONA adaptado (AAS, antiagregação, anticoagulação) e encaminha para reperfusão (angioplastia/tenecteplase)'}]),
+  ];
+}
+
+/* ---------- NAV ---------- */
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.admin && !isAdmin()) return toast('Área restrita a administradores 🔒','err');
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  ['dashboard','estacoes','sala','gestao','config'].forEach(v=>$('view-'+v).classList.toggle('hidden',v!==b.dataset.view));
+  renderAll();
+});
+function gotoView(v){ document.querySelector(`.nav button[data-view="${v}"]`)?.click(); }
+
+/* ---------- RENDER GERAL ---------- */
+function renderAll(){ renderDashboard(); renderCatalog(); renderRoomList(); renderUsers(); if(state.currentRoom) renderRoomView(); if(isAdmin()) renderAdminUsers(); }
+
+/* ---------- DASHBOARD + GRÁFICOS ---------- */
+function renderDashboard(){
+  $('kpiStations').textContent=allStations().length;
+  $('kpiTrainings').textContent=state.history.length;
+  const avg=state.history.length?Math.round(state.history.reduce((a,h)=>a+h.pct,0)/state.history.length):0;
+  $('kpiAvg').textContent=avg+'%';
+  $('kpiRooms').textContent=state.rooms.length;
+  const areas=['CM','CIR','GO','PED','MFC'], cmap={CM:'var(--cm)',CIR:'var(--cir)',GO:'var(--go)',PED:'#65a30d',MFC:'#d97706'};
+  $('areaBars').innerHTML=areas.map(a=>{
+    const hs=state.history.filter(h=>h.area===a);
+    const p=hs.length?Math.round(hs.reduce((x,h)=>x+h.pct,0)/hs.length):0;
+    return `<div class="bar-row"><span class="bl">${a}</span><div class="track"><div class="fill" style="background:${cmap[a]}" data-w="${p}"></div></div><span class="pv">${hs.length?p+'%':'—'}</span></div>`;
+  }).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('#areaBars .fill').forEach(f=>f.style.width=f.dataset.w+'%')));
+  const C=2*Math.PI*54;
+  $('donutVal').style.strokeDasharray=`${C*avg/100} ${C}`;
+  $('donutTxt').textContent=avg+'%';
+  $('histList').innerHTML=state.history.length? state.history.slice(-8).reverse().map((h,j)=>{
+    const idx=state.history.length-1-j;
+    return `<div style="padding:7px;border-bottom:2px dashed var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+      <span><span class="badge ${h.area}">${h.area}</span> ${esc(h.tema)}</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <button class="sky" style="padding:4px 10px;font-size:11px" onclick="openReviewOrGenerate(${idx})">${h.review?'🗂 Revisão':'🗂 Gerar revisão'}</button>
+        ${(h.summaryData||h.review?.summaryData)?`<button class="violet" style="padding:4px 10px;font-size:11px" onclick="openSummary(state.history[${idx}])">📋 Resumo</button>`:''}
+        <b>${h.pct}%</b></span></div>`;
+  }).join('') : '<span class="small">Nenhum treino ainda. Entre em uma Estação e pratique! 🚀</span>';
+}
+
+/* ---------- USUÁRIOS ONLINE ---------- */
+function renderUsers(){
+  const onSet=onlineSet();
+  const others=state.users.filter(u=>u.email!==ROOT_EMAIL&&!onSet.has(u.email)).slice(0,12);
+  const onChips=state.presence.map(p=>userChip({email:p.email,name:p.name,roomRole:p.roomRole},true)).join('');
+  $('usersList').innerHTML=(onChips+others.map(u=>userChip(u,false)).join(''))||'<span class="small">Nenhum usuário cadastrado ainda.</span>';
+}
+function userChip(u,on){
+  const col='hsl('+([...(u.name||'?')].reduce((a,c)=>a+c.charCodeAt(0),0)%360)+',65%,55%)';
+  return `<span class="user-chip"><span class="uav" style="background:${col}">${esc((u.name||'?')[0].toUpperCase())}</span>${esc(u.name)}<span class="${on?'on':'off'}" title="${on?'online':'offline'}"></span></span>`;
+}
+
+/* ---------- SALAS ---------- */
+function renderRoomList(){
+  const mine=state.rooms.filter(r=>r.creator===state.user?.email);
+  $('roomsList').innerHTML = state.rooms.length? state.rooms.map(r=>{
+    const st=allStations().find(s=>s.id===r.stationId);
+    const allowed=r.vis==='open'||r.creator===state.user.email||r.members.includes(state.user.email)||isAdmin();
+    const n=state.presence.filter(p=>p.room===r.id).length;
+    return `<div class="room-card ${n?'live':''}">
+      <div class="room-head"><b>🚪 ${esc(r.name)}</b>
+        <span style="display:flex;gap:4px"><span class="room-tag ${r.vis}">${r.vis==='open'?'ABERTA':'FECHADA'}</span><span class="room-tag ${r.mode==='ia'?'ia':'open'}">${r.mode==='ia'?'🤖 IA':'👥 P2P'}</span></span></div>
+      <div class="meta" style="margin:8px 0">${st?`<span class="badge ${st.area}">${st.area}</span> ${esc(st.tema)}`:'<span class="small">sem estação vinculada</span>'} · 👤 ${esc(r.creatorName)} · 🟢 ${n} presente(s)</div>
+      <div class="foot">
+        <button class="ghost" style="padding:6px 10px" onclick="showShareModal('${r.id}')">📤 Convite</button>
+        ${allowed?`<button class="sky" onclick="enterRoom('${r.id}')">Entrar ➜</button>`:'<span class="small">🔒 somente convidados</span>'}
+        ${(r.creator===state.user.email||isAdmin())?`<button class="ghost" onclick="closeRoom('${r.id}')">Encerrar</button>`:''}
+      </div></div>`;
+  }).join('') : '<p class="small">Nenhuma sala aberta no momento. Crie a primeira! ✨</p>';
+  if(mine.length&&!isAdmin()) $('myRoomWarn').innerHTML='⚠️ Você já tem a sala <b>'+esc(mine[0].name)+'</b> — criar outra a encerrará automaticamente.';
+  else $('myRoomWarn').innerHTML='';
+}
+function renderRoomMembers(){
+  const closed=bpVal('roomVisBP')==='closed';
+  $('roomMembersWrap').classList.toggle('hidden',!closed);
+  if(!closed) return;
+  const on=onlineSet();
+  const us=state.users.filter(u=>u.email!==state.user.email&&u.email!==ROOT_EMAIL)
+    .sort((a,b)=>(on.has(b.email)?1:0)-(on.has(a.email)?1:0));
+  $('roomMembers').innerHTML=us.map(u=>
+    `<div class="member-card" data-e="${esc(u.email)}" onclick="this.classList.toggle('sel')">${on.has(u.email)?'🟢':'⚪'} ${esc(u.name)}<div class="small">${esc(u.email)}</div></div>`
+  ).join('')||'<span class="small">Cadastre mais usuários para convidar — ou abra sem convidados e compartilhe o link.</span>';
+}
+function openCreateRoom(){
+  const el=$('roomStationBP'); el.classList.add('boxpick');
+  el.innerHTML='<p class="small" style="width:100%;margin:0 0 4px">Selecione <b>uma ou mais estações</b> (obrigatório para abrir a sala):</p>'+
+    allStations().slice(0,80).map(s=>`<div class="bx" data-v="${s.id}">${esc(s.tema)}</div>`).join('');
+  el.querySelectorAll('.bx').forEach(b=>b.onclick=()=>b.classList.toggle('sel'));
+  $('roomName').value=''; renderRoomMembers(); openModal('roomModal');
+}
+async function createRoom(){
+  const stationIds=[...document.querySelectorAll('#roomStationBP .bx.sel')].map(x=>x.dataset.v);
+  if(!stationIds.length) return toast('Selecione ao menos 1 estação para abrir a sala 🛑','err');
+  const name=$('roomName').value.trim()||('Sala de '+state.user.name);
+  const mode=bpVal('roomModeBP'), vis=bpVal('roomVisBP');
+  const members=[...document.querySelectorAll('#roomMembers .member-card.sel')].map(x=>x.dataset.e);
+  try{
+    const j=await api('room_create',{name,stationIds,mode,vis,members});
+    closeModal('roomModal');
+    toast('Sala criada! Compartilhe o convite 🎉','ok');
+    const rs=await api('rooms'); state.rooms=rs.rooms||[]; renderRoomList();
+    showShareModal(j.id);
+    enterRoom(j.id);
+  }catch(e){ toast(e.message,'err'); }
+}
+async function closeRoom(id){
+  try{ await api('room_close',{id}); }catch(e){ toast(e.message,'err'); }
+  if(state.currentRoom===id) leaveRoom(true);
+  const rs=await api('rooms').catch(()=>({rooms:[]})); state.rooms=rs.rooms||[];
+  toast('Sala encerrada','ok'); renderRoomList();
+}
+function enterRoom(id){
+  const r=state.rooms.find(x=>x.id===id); if(!r) return toast('Sala não existe mais','err');
+  state.currentRoom=id;
+  if(r.mode==='ia'){ state.myRoomRole='medico'; afterRolePick(); }
+  else openModal('roleModal');
+}
+function pickRole(role){ state.myRoomRole=role; closeModal('roleModal'); afterRolePick(); }
+function afterRolePick(){
+  gotoView('sala'); renderRoomView();
+  if(socket?.connected) socket.emit('room:join',{roomId:state.currentRoom,role:state.myRoomRole});
+  heartbeat();
+  const r=currentRoomObj();
+  if(r&&r.mode==='ia') startIAInRoom(r);
+  const role=state.myRoomRole;
+  if(role==='medico'||role==='ator'||role==='chefe') setTimeout(()=>rtcJoin(),500);
+  else if(role==='espectador') toast('Você entrou como espectador 👀 — toque em "Assistir chamada" para ver ao vivo','ok');
+}
+function leaveRoom(silent){
+  rtcLeave(true);
+  if(socket?.connected) socket.emit('room:leave');
+  heartbeat();
+  state.currentRoom=null; state.myRoomRole=null; state.roomCards=[];
+  if(!silent) gotoView('dashboard'); else gotoView('dashboard');
+}
+function renderRoomParticipants(online){
+  const r=currentRoomObj(); if(!r) return;
+  const pres=online||state.presence.filter(p=>p.room===r.id);
+  $('roomParticipants').innerHTML=pres.map(p=>`<span class="user-chip"><span class="uav" style="background:var(--teal)">${esc((p.name||'?')[0].toUpperCase())}</span>${esc(p.name)} <span class="small">${({ator:'🎭',chefe:'👑',espectador:'👀',medico:'🩺'})[p.roomRole]||'🩺'}</span><span class="on"></span></span>`).join('')||'<span class="small">só você por aqui…</span>';
+}
+function renderRoomView(){
+  const r=currentRoomObj();
+  if(!r){ return; }
+  const st=allStations().find(s=>s.id===r.stationId);
+  state.currentStation=st||null; if(st) st._score=st._score||{};
+  $('roomTitle').innerHTML=`🚪 ${esc(r.name)} <span class="room-tag ${r.vis}">${r.vis==='open'?'ABERTA':'FECHADA'}</span> <span class="room-tag ${r.mode==='ia'?'ia':'open'}">${r.mode==='ia'?'🤖 com IA':'👥 usuários'}</span>`;
+  const role=state.myRoomRole, tag=$('roomRoleTag');
+  if(role==='chefe'){ tag.className='role-pill chefe'; tag.textContent='👑 Chefe · colaborativo'; }
+  else if(role==='espectador'){ tag.className='role-pill esp'; tag.textContent='👀 Espectador'; }
+  else if(role==='ator'){ tag.className='role-pill ator'; tag.textContent='🎭 Avaliador / Ator'; }
+  else { tag.className='role-pill medico'; tag.textContent='🩺 Médico(a)'; }
+  renderRoomParticipants();
+  /* troca da estação ativa (multi-estações, criador/admin) */
+  const swW=$('roomStationSwitchWrap');
+  if((r.stationIds||[]).length>1&&(r.creator===state.user.email||isAdmin())){
+    swW.innerHTML='<div class="boxpick" style="margin-bottom:10px"><span class="small" style="width:100%">Estações da sala — o criador alterna a ativa:</span>'+
+      r.stationIds.map(id=>{ const s=allStations().find(x=>x.id===id);
+        return s?`<div class="bx ${id===r.stationId?'sel':''}" data-v="${id}">${esc(s.tema)}</div>`:''; }).join('')+'</div>';
+    swW.querySelectorAll('.bx').forEach(b=>b.onclick=()=>{
+      r.stationId=b.dataset.v; renderRoomView();
+      api('room_update',{id:r.id,stationId:r.stationId}).catch(e=>toast(e.message,'err'));
+    });
+  } else swW.innerHTML='';
+  if(st){
+    $('roomScenario').innerHTML=scenarioHTML(st, role==='ator'||role==='chefe'||state.studyMode||r.mode==='ia');
+    renderChecklist('room',st);
+    if(!timers.room||!timers.room.running) timerReset('room',st.duracao||10);
+  } else { $('roomScenario').innerHTML='<p class="small">Estação sem cenário vinculado.</p>'; $('roomChecklist').innerHTML=''; }
+  $('roomIAPanel').classList.toggle('hidden',r.mode!=='ia');
+  $('roomInviteBtn').style.display=(r.creator===state.user.email||isAdmin())?'':'none';
+  $('rtcJoinBtn').textContent=role==='espectador'?'📹 Assistir chamada':'📹 Entrar';
+  const canSend=role==='ator'||role==='chefe'||r.creator===state.user.email||isAdmin();
+  $('cardSendBtn').style.display=canSend?'':'none';
+  document.querySelectorAll('#roomChecklist .ck-acts').forEach(x=>x.style.display=(role==='espectador'||role==='medico'&&r.mode==='users'&&false)?'none':'');
+  if(role==='espectador'){ document.querySelectorAll('#roomChecklist .ck-acts').forEach(x=>x.style.display='none'); $('roomFinishBtn').classList.add('hidden'); }
+  else $('roomFinishBtn').classList.remove('hidden');
+  renderCards();
+}
+
+/* ---------- CENÁRIO / CHECKLIST ---------- */
+function scenarioHTML(s,canSee){
+  return `<h3>📋 Instruções do participante</h3><p>${esc(s.instrucoes||'').replace(/\n/g,'<br>')}</p>
+  <h3>🎭 Folha do avaliador / ator ${!canSee?'<span class="small">(oculta no seu papel)</span>':''}</h3>
+  ${canSee?`<div style="background:#f0fdfa;padding:12px;border-radius:12px;border:2px dashed var(--teal3)">${esc(s.avaliador||'').replace(/\n/g,'<br>')}</div>`:'<p class="small">Disponível apenas para Avaliador/Ator, Chefe ou no Modo Estudo.</p>'}
+  <h3>🧪 Exames complementares</h3><p class="small">${esc(s.exames||'').replace(/\n/g,'<br>')}</p>`;
+}
+function renderChecklist(ctx,s){
+  $(ctx+'Checklist').innerHTML=s.checklist.map((c,i)=>`
+    <div class="ck-item" id="ck-${ctx}-${i}">
+      <div class="pts">${c.pts} pts</div><div class="ck-txt">${esc(c.text)}</div>
+      <div class="ck-acts"><button style="background:linear-gradient(135deg,#65a30d,#a3e635)" onclick="markCK('${ctx}',${i},1)">✓</button><button class="coral" onclick="markCK('${ctx}',${i},0)">✗</button></div>
+    </div>`).join('');
+  updateScore(ctx);
+}
+function markCK(ctx,i,v){
+  const s=state.currentStation; if(!s) return;
+  const el=$('ck-'+ctx+'-'+i); el.classList.remove('done','miss'); el.classList.add(v?'done':'miss');
+  (s._score=s._score||{})[i]=v; updateScore(ctx);
+}
+function updateScore(ctx){
+  const s=state.currentStation; if(!s)return;
+  const tot=s.checklist.reduce((a,c)=>a+c.pts,0);
+  const got=s.checklist.reduce((a,c,i)=>a+(s._score?.[i]?c.pts:0),0);
+  const pct=tot?Math.round(got/tot*100):0;
+  $(ctx+'Bar').style.width=pct+'%';
+  $(ctx+'Score').textContent=`Pontuação: ${got} / ${tot} (${pct}%)`;
+}
+
+/* ---------- CORREÇÃO IA (toggle + transcrição + PEP justificado) ---------- */
+const recogs={}, transcripts={};
+function toggleAI(ctx){
+  state.aiCorrect[ctx]=!state.aiCorrect[ctx];
+  const t=$('aiTog-'+ctx);
+  t.textContent='🤖 Correção IA: '+(state.aiCorrect[ctx]?'ON 🎙':'OFF');
+  t.className=state.aiCorrect[ctx]?'violet ai-toggle on':'violet ai-toggle';
+  toast(state.aiCorrect[ctx]
+    ?'Correção IA ativada — ao iniciar, o áudio da estação (médico e ator) será transcrito e pontuado no PEP'
+    :'Correção IA desativada — pontuação manual','ok');
+}
+function startRec(ctx){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('Reconhecimento de voz não suportado neste navegador — use Chrome/Edge','err'); state.aiCorrect[ctx]=false; toggleAI2(ctx); return; }
+  stopRec(ctx);
+  const rec=new SR(); rec.lang='pt-BR'; rec.continuous=true; rec.interimResults=false;
+  transcripts[ctx]=transcripts[ctx]||'';
+  rec.onresult=e=>{ for(let i=e.resultIndex;i<e.results.length;i++)
+    if(e.results[i].isFinal) transcripts[ctx]+=e.results[i][0].transcript.trim()+'\n'; };
+  rec.onend=()=>{ if(recogs[ctx]&&recogs[ctx]._on){ try{rec.start();}catch(e){} } };
+  rec._on=true;
+  try{ rec.start(); recogs[ctx]=rec; toast('🎙 Gravando áudio da estação para a correção IA…','ok'); }catch(e){}
+}
+function toggleAI2(ctx){ const t=$('aiTog-'+ctx); t.textContent='🤖 Correção IA: OFF'; t.classList.remove('on'); }
+function stopRec(ctx){ const r=recogs[ctx]; if(r){ r._on=false; try{r.stop();}catch(e){} delete recogs[ctx]; } }
+
+/* ---------- FINALIZAR ESTAÇÃO (manual ou IA) ---------- */
+function saveHistoryEntry(h){
+  state.history.push(h);
+  api('history_add',h).catch(()=>{});
+  renderDashboard();
+}
+function finishStation(ctx){
+  const s=state.currentStation; if(!s)return;
+  const tr=(transcripts[ctx]||'').trim();
+  const useAI=state.aiCorrect[ctx]&&tr.length>10;
+  stopRec(ctx);
+  if(!useAI){ finishManual(ctx,s); return; }
+  (async()=>{
+    const tot=s.checklist.reduce((a,c)=>a+c.pts,0);
+    toast('🤖 IA analisando a transcrição contra o PEP…');
+    try{
+      const chk=s.checklist.map((c,i)=>`${i+1}. (${c.pts} pts) ${c.text}`).join('\n');
+      const j=await callAIJson(
+`Você é avaliador OSCE/Revalida (padrão INEP). Abaixo estão o PEP (Padrão Esperado de Procedimento) e a transcrição do áudio da estação (falas do médico e do ator/paciente).
+Para CADA item do PEP, determine se o elemento foi citado ou realizado pelo médico EM CONTEXTO VÁLIDO (menção fora de contexto NÃO pontua).
+Responda SOMENTE JSON válido, sem markdown:
+{"items":[{"i":1,"ok":true,"just":"trecho/motivo"}],"fortes":["..."],"fracos":["..."],"sugestoes":["..."],"resumo":"..."}
+
+PEP:
+${chk}
+
+TRANSCRIÇÃO:
+${tr}`);
+      if(!j||!Array.isArray(j.items)||!j.items.length) throw new Error('resposta inválida da IA');
+      s._score={};
+      j.items.forEach(it=>{ if(it.i>=1&&it.i<=s.checklist.length) s._score[it.i-1]=it.ok?1:0; });
+      const got=s.checklist.reduce((a,c,i)=>a+(s._score[i]?c.pts:0),0);
+      const pct=tot?Math.round(got/tot*100):0;
+      const timeUsed=(s.duracao*60)-(timers[ctx]?.left||0);
+      const review={items:j.items,fortes:j.fortes||[],fracos:j.fracos||[],sugestoes:j.sugestoes||[],resumo:j.resumo||''};
+      const h={area:s.area,tema:s.tema,pct,got,tot,timeUsed,date:Date.now(),ai:1,
+        room:currentRoomObj()?.name||null,transcript:tr.slice(0,8000),review};
+      saveHistoryEntry(h);
+      if($(ctx+'Checklist')){
+        j.items.forEach(it=>{ const el=$('ck-'+ctx+'-'+(it.i-1));
+          if(el){ el.classList.remove('done','miss'); el.classList.add(it.ok?'done':'miss'); } });
+        updateScore(ctx);
+      }
+      if(ctx==='room') attachSummaryData(h,s);
+      transcripts[ctx]='';
+      if(ctx==='room') setTimeout(()=>openSummary(h),350);
+      openReviewCard(h,s);
+      toast(`Correção IA concluída: ${pct}% 🎯`,'ok');
+      if(ctx==='sm') closeModal('stationModal');
+    }catch(e){
+      toast('IA falhou ('+e.message+') — usando correção manual','err');
+      finishManual(ctx,s);
+    }
+  })();
+}
+function finishManual(ctx,s){
+  const tot=s.checklist.reduce((a,c)=>a+c.pts,0);
+  const got=s.checklist.reduce((a,c,i)=>a+(s._score?.[i]?c.pts:0),0);
+  const pct=tot?Math.round(got/tot*100):0;
+  const timeUsed=(s.duracao*60)-(timers[ctx]?.left||0);
+  const h={area:s.area,tema:s.tema,pct,got,tot,timeUsed,date:Date.now(),ai:0,room:currentRoomObj()?.name||null};
+  saveHistoryEntry(h);
+  toast(`Finalizado! Nota ${pct}% 🎯`,'ok');
+  if(ctx==='room'){ attachSummaryData(h,s); setTimeout(()=>openSummary(h),350); }
+  s._score={}; updateScore(ctx);
+  if(ctx==='sm') closeModal('stationModal');
+}
+function attachSummaryData(h,s){
+  const sd={cards:currentCards(),instrucoes:s.instrucoes,avaliador:s.avaliador,exames:s.exames,role:state.myRoomRole};
+  h.summaryData=sd; h.review=Object.assign({},h.review||{},{summaryData:sd});
+  api('history_add',h).catch(()=>{});
+}
+
+/* ---------- CARD DE REVISÃO DIDÁTICO ---------- */
+function openReviewCard(h,s){
+  s=s||allStations().find(x=>x.tema===h.tema)||{tema:h.tema,area:h.area,checklist:[]};
+  const rv=h.review||{};
+  const rows=(s.checklist||[]).map((c,i)=>{
+    const it=(rv.items||[]).find(x=>x.i===i+1);
+    return `<tr><td style="text-align:center">${it?(it.ok?'✅':'❌'):'—'}</td>
+      <td>${esc(c.text)}</td><td class="small">${esc(it?.just||'')}</td></tr>`;
+  }).join('');
+  $('reviewBody').innerHTML=`
+   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+     <div><span class="badge ${h.area}">${h.area}</span> <b style="font-size:17px">${esc(h.tema)}</b>
+       <div class="small">${new Date(h.date).toLocaleString('pt-BR')}${h.ai?' · 🤖 correção por IA':''}${h.room?' · 🚪 '+esc(h.room):''}</div></div>
+     <div style="text-align:center"><div style="font-size:34px;font-weight:900;color:${h.pct>=70?'#65a30d':h.pct>=50?'#d97706':'#dc2626'}">${h.pct}%</div>
+       <div class="small">desempenho no PEP</div></div>
+   </div>
+   ${rv.resumo?`<p style="background:#f0fdfa;border:2px dashed var(--teal3);border-radius:12px;padding:10px;font-size:13px">${esc(rv.resumo)}</p>`:''}
+   <div class="row">
+     <div class="rev-box ok"><h4>💪 Pontos fortes</h4><ul>${(rv.fortes||[]).map(f=>`<li>${esc(f)}</li>`).join('')||'<li class="small">—</li>'}</ul></div>
+     <div class="rev-box bad"><h4>⚠️ Pontos a desenvolver</h4><ul>${(rv.fracos||[]).map(f=>`<li>${esc(f)}</li>`).join('')||'<li class="small">—</li>'}</ul></div>
+   </div>
+   <div class="rev-box tip"><h4>💡 Sugestões de conduta para a próxima performance</h4>
+     <ul>${(rv.sugestoes||[]).map(f=>`<li>${esc(f)}</li>`).join('')||'<li class="small">—</li>'}</ul></div>
+   ${rows?`<h4 style="margin:14px 0 6px">📋 PEP — item a item</h4><table class="rev-table"><tbody>${rows}</tbody></table>`:''}
+   <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+     <button class="amber" onclick="printEl('reviewBody','Revisão — pratica.M3D')">🖨 Imprimir / PDF</button>
+     <button class="ghost" onclick="closeModal('reviewModal')">Fechar</button>
+   </div>`;
+  openModal('reviewModal');
+}
+async function openReviewOrGenerate(idx){
+  const h=state.history[idx]; if(!h) return;
+  if(h.review&&(h.review.items||h.review.fortes)) return openReviewCard(h);
+  toast('🤖 Gerando card de revisão didático…');
+  try{
+    const j=await callAIJson(
+`Você é preceptor do Exame Revalida. O candidato realizou a estação "${h.tema}" (${h.area}) e obteve ${h.pct}% no PEP.
+Gere um card de revisão didático em JSON válido, sem markdown:
+{"fortes":["..."],"fracos":["..."],"sugestoes":["..."],"resumo":"..."}
+Liste pontos fortes prováveis, pontos fracos prováveis e sugestões práticas de conduta durante a performance que ajudariam a superar as dificuldades desta estação.`);
+    h.review=Object.assign({},h.review||{},{fortes:j?.fortes||[],fracos:j?.fracos||[],sugestoes:j?.sugestoes||[],resumo:j?.resumo||'',items:h.review?.items||[]});
+    api('history_add',h).catch(()=>{});
+    renderDashboard();
+    openReviewCard(h);
+  }catch(e){ toast('IA falhou: '+e.message,'err'); }
+}
+function printEl(elId,title){
+  const w=window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+
+    '<style>body{font-family:system-ui,sans-serif;color:#134e4a;padding:24px}ul{margin:6px 0}'+
+    'table{border-collapse:collapse;width:100%}td{border:1px solid #99f6e4;padding:6px;font-size:12px;vertical-align:top}'+
+    '.card-chip{border-left:4px solid #8b5cf6;padding:6px 10px;margin:5px 0;background:#faf5ff;font-size:13px}'+
+    '.sum-sec{border:1px solid #99f6e4;border-radius:10px;padding:10px;margin-top:10px}</style></head><body>'+
+    $(elId).innerHTML.replace(/<button[\s\S]*?<\/button>/g,'')+'</body></html>');
+  w.document.close(); w.print();
+}
+
+/* ---------- RESUMO FINAL COMPLETO ---------- */
+const CARD_CATS=[{v:'anamnese',l:'🗣 Anamnese'},{v:'exame',l:'🩺 Exame físico'},{v:'exames',l:'🧪 Exames compl.'},{v:'conduta',l:'💊 Conduta'},{v:'comunicacao',l:'💬 Comunicação'},{v:'geral',l:'🎯 Geral'}];
+function openSummary(h){
+  h=h||state.history[state.history.length-1]; if(!h) return;
+  const sd=h.summaryData||h.review?.summaryData||{};
+  const rv=h.review||{};
+  const s=state.currentStation||allStations().find(x=>x.tema===h.tema)||{};
+  const cards=(sd.cards||[]);
+  $('summaryBody').innerHTML=`
+   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+     <div><span class="badge ${h.area}">${h.area}</span> <b style="font-size:17px">${esc(h.tema)}</b>
+       <div class="small">${new Date(h.date).toLocaleString('pt-BR')}${h.room?' · 🚪 '+esc(h.room):''}${sd.role?' · papel: '+esc(sd.role):''}</div></div>
+     <div style="text-align:center"><div style="font-size:34px;font-weight:900;color:${h.pct>=70?'#65a30d':h.pct>=50?'#d97706':'#dc2626'}">${h.pct}%</div><div class="small">PEP</div></div>
+   </div>
+   <div class="row">
+     <div class="sum-sec"><h4>🧑‍⚕️ Cenário do candidato (instruções)</h4><div class="small">${esc(sd.instrucoes||s.instrucoes||'—').replace(/\n/g,'<br>')}</div></div>
+     <div class="sum-sec"><h4>🎭 Cenário do ator / avaliador</h4><div class="small">${esc(sd.avaliador||s.avaliador||'—').replace(/\n/g,'<br>')}</div></div>
+   </div>
+   <div class="sum-sec"><h4>🃏 Cards de auxílio compartilhados (${cards.length})</h4>
+     ${cards.length?cards.map(c=>`<div class="card-chip"><b>${esc((CARD_CATS.find(x=>x.v===c.cat)||{}).l||'🎯')}</b> ${esc(c.text)}<div class="small">por ${esc(c.by||'')}</div></div>`).join(''):'<span class="small">Nenhum card foi compartilhado nesta sessão.</span>'}</div>
+   ${rv.resumo||rv.fortes?`<div class="sum-sec"><h4>🤖 Feedback de IA</h4>
+     ${rv.resumo?`<p class="small">${esc(rv.resumo)}</p>`:''}
+     <div class="row"><div><b class="small">💪 Fortes</b><ul class="small">${(rv.fortes||[]).map(f=>`<li>${esc(f)}</li>`).join('')||'<li>—</li>'}</ul></div>
+     <div><b class="small">⚠️ A desenvolver</b><ul class="small">${(rv.fracos||[]).map(f=>`<li>${esc(f)}</li>`).join('')||'<li>—</li>'}</ul></div></div>
+     ${(rv.sugestoes||[]).length?`<b class="small">💡 Sugestões</b><ul class="small">${rv.sugestoes.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:''}</div>`:''}
+   <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+     <button class="amber" onclick="printEl('summaryBody','Resumo da sessão — pratica.M3D')">🖨 Imprimir / PDF</button>
+     <button class="ghost" onclick="closeModal('summaryModal')">Fechar</button></div>`;
+  openModal('summaryModal');
+}
+
+/* ---------- TIMER ---------- */
+const timers={};
+function timerReset(ctx,min){
+  const dur=(min||state.currentStation?.duracao||10)*60;
+  clearInterval(timers[ctx]?.iv); timers[ctx]={left:dur,running:false,iv:null};
+  const el=$(ctx+'Timer'); if(el){el.textContent=fmt(dur); el.className='timer';}
+}
+function timerStart(ctx){
+  const t=timers[ctx]; if(!t||t.running)return; t.running=true;
+  if(state.aiCorrect[ctx]) startRec(ctx);
+  t.iv=setInterval(()=>{ t.left--; const el=$(ctx+'Timer');
+    el.textContent=fmt(t.left); el.className='timer'+(t.left<=60?' danger':t.left<=180?' warn':'');
+    if(t.left<=0){clearInterval(t.iv);t.running=false;stopRec(ctx);beep();toast('⏰ Tempo esgotado!','err')} },1000);
+}
+function timerPause(ctx){const t=timers[ctx]; if(t){clearInterval(t.iv);t.running=false} stopRec(ctx);}
+const fmt=s=>{s=Math.max(0,s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function beep(){try{const a=new AudioContext(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();setTimeout(()=>{o.stop();a.close()},400)}catch(e){}}
+function toggleStudyMode(){state.studyMode=!state.studyMode;toast('Modo estudo: '+(state.studyMode?'LIGADO 📖':'desligado')); if(state.currentRoom)renderRoomView();}
+
+/* ---------- CATÁLOGO ---------- */
+function renderCatalog(){
+  const q=($('fSearch').value||'').toLowerCase(), area=bpVal('fAreaBP')||'';
+  const list=allStations().filter(s=>(!area||s.area===area)&&(!q||(s.tema+' '+s.especialidade+' '+s.area).toLowerCase().includes(q)));
+  const counts={CM:0,CIR:0,GO:0,PED:0,MFC:0}; allStations().forEach(s=>counts[s.area]!==undefined&&counts[s.area]++);
+  $('areaStats').innerHTML=Object.entries(counts).map(([k,v])=>`<span class="badge ${k}">${k}: ${v}</span>`).join('');
+  $('stationCards').innerHTML=list.length?list.map(s=>`
+    <div class="card"><div class="area-bar ${s.area}"></div>
+      <div style="display:flex;justify-content:space-between"><span class="badge ${s.area}">${s.area}</span><span class="small">⏱ ${s.duracao||10} min</span></div>
+      <h3>${esc(s.tema)}</h3>
+      <div class="meta"><span>${esc(s.especialidade||'')}</span><span>${esc(s.identificacao||'')}</span>${s.procedimento==='Marcado'?'<span>🔧 Proc</span>':''}${s.didatica==='Marcada'?'<span>📚 Didática</span>':''}</div>
+      <div class="foot"><button onclick="openStation('${s.id}')">Abrir estação</button>
+      ${isAdmin()?`<button class="ghost" onclick="editStation('${s.id}')">✏️</button>`:''}</div></div>`).join('')
+    :'<p class="small">Nenhuma estação encontrada.</p>';
+}
+function openStation(id){
+  const s=allStations().find(x=>x.id===id); if(!s)return;
+  state.currentStation=s; s._score={};
+  $('smArea').textContent=s.area; $('smArea').className='badge '+s.area;
+  $('smTitle').textContent=s.tema; $('smMeta').textContent=`${s.especialidade||''} · ${s.identificacao||''} · ${s.duracao||10} min`;
+  $('smScenario').innerHTML=scenarioHTML(s,true);
+  renderChecklist('sm',s); timerReset('sm',s.duracao||10); openModal('stationModal');
+}
+
+/* ---------- CHAT (lobby + sala, via Socket.io) ---------- */
+function pushChatMsg(room,m){
+  const box=room==='lobby'?'lobbyMsgs':'roomChatMsgs'; const el=$(box); if(!el)return;
+  if(room!=='lobby'&&room!==state.currentRoom) return;
+  el.insertAdjacentHTML('beforeend',`<div class="msg ${m.email===state.user?.email?'me':'them'}">${m.email!==state.user?.email?`<span class="who">${esc(m.name)}</span>`:''}${esc(m.text)}</div>`);
+  el.scrollTop=el.scrollHeight;
+}
+function pushReaction(e){
+  const box=$('roomChatMsgs'); if(!box)return;
+  box.insertAdjacentHTML('beforeend',`<div class="msg them react"><span class="who">${esc(e.name||'')}</span><span class="big-emo">${esc(e.emoji||'')}</span></div>`);
+  box.scrollTop=box.scrollHeight;
+}
+function sendChat(roomId){
+  const inp=roomId==='lobby'?'lobbyInput':'roomChatInput';
+  const t=$(inp).value.trim(); if(!t)return; $(inp).value='';
+  socket?.emit('chat',{room:roomId,text:t});
+}
+
+/* ---------- EMOJIS / REAÇÕES ---------- */
+const EMOJIS=['😀','😂','🤣','😊','😍','🤔','😅','😭','🤯','😴','👍','👎','👏','🙏','💪','🔥','❤️','💚','🎉','✨','✅','❌','⚠️','🩺','💊','🧪','🫀','🧠','📋','🃏','⭐'];
+const REACTS=['👍','❤️','😂','👏','🔥','😮'];
+function toggleEmoji(inpId){
+  const p=$('emojiPick');
+  if(!p.classList.contains('hidden')&&p._inp===inpId){ p.classList.add('hidden'); return; }
+  p._inp=inpId;
+  p.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><b>😀 Emojis</b><button class="ghost" style="padding:3px 9px" onclick="$(\'emojiPick\').classList.add(\'hidden\')">✕</button></div>'+
+    '<div class="eg">'+EMOJIS.map(e=>`<span onclick="emojiInto('${inpId}','${e}')">${e}</span>`).join('')+'</div>'+
+    (inpId==='roomChatInput'?'<div class="rr"><span class="small" style="align-self:center">Reação rápida:</span>'+REACTS.map(e=>`<span onclick="sendReact('${e}')">${e}</span>`).join('')+'</div>':'');
+  p.classList.remove('hidden');
+}
+function emojiInto(inpId,e){ const i=$(inpId); if(i){ i.value+=e; i.focus(); } }
+function sendReact(e){ $('emojiPick').classList.add('hidden'); if(state.currentRoom) socket?.emit('react',{room:state.currentRoom,emoji:e}); }
+
+/* ---------- IA (proxy do servidor: Gemini → OpenAI → Pollinations) ---------- */
+async function callAI(prompt){
+  const j=await api('ai',{prompt});
+  return j.text;
+}
+async function callAIJson(prompt){
+  const txt=await callAI(prompt);
+  return extractJSON(txt);
+}
+async function chatAI(msgs){
+  const j=await api('ai/chat',{messages:msgs});
+  return j.text;
+}
+async function testIA(){
+  $('cfgStatus').textContent='⏳ testando provedores…';
+  try{
+    const j=await api('ai/test',null,'GET');
+    $('cfgStatus').innerHTML=j.results.map(r=>r.ok?`✅ ${r.provider} (${r.ms}ms)`:`❌ ${r.provider}: ${esc(r.error)}`).join('<br>');
+  }catch(e){ $('cfgStatus').textContent='❌ '+e.message; }
+}
+function extractJSON(t){try{return JSON.parse(t)}catch(e){}const m=String(t||'').match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e){}}return null}
+async function generateStationIA(){
+  const area=bpVal('iaAreaBP'), tema=$('iaTema').value.trim(), extra=$('iaExtra').value;
+  if(!tema)return toast('Informe o tema','err');
+  $('iaStatus').textContent='⏳ Chamando provedores (Gemini → OpenAI → Pollinations)…';
+  const prompt=`Você é especialista em avaliação OSCE do Exame Revalida (padrão INEP). Gere UMA estação em JSON válido com os campos exatos:
+{"area":"${area}","especialidade":"...","tema":"${tema}","identificacao":"Não informada","ano":"","edicao":"","procedimento":"Não marcado","didatica":"Não marcada","duracao":10,
+"instrucoes":"...(instruções para o participante, 1-2 parágrafos)...",
+"avaliador":"...(folha do ator/avaliador: script de respostas, sinais vitais, achados de exame físico simulado)...",
+"exames":"...(exames complementares disponíveis com resultados)...",
+"checklist":[{"pts":1,"text":"..."}]}
+Checklist no padrão INEP com 10-15 itens somando ~15-20 pontos, priorizando os elementos mais relevantes ao diagnóstico e à conduta segundo a prática médica canônica, diretrizes vigentes e o que o INEP vem cobrando nas provas recentes. Inclua itens de segurança do paciente e comunicação. ${extra}. Responda SOMENTE o JSON, sem markdown.`;
+  try{
+    const txt=await callAI(prompt);
+    $('iaResult').classList.remove('hidden'); $('iaResult').textContent=txt;
+    const j=extractJSON(txt);
+    if(j&&j.tema){ j.id=uid('ia'); j.access=0;
+      await api('stations',{station:j}); await pullStations(); renderAll();
+      $('iaStatus').textContent='✅ Estação criada e adicionada ao banco do servidor!'; toast('Estação gerada por IA ✨','ok'); }
+    else $('iaStatus').textContent='⚠ Resposta não interpretável como JSON — veja o texto bruto.';
+  }catch(e){ $('iaStatus').textContent='❌ '+e.message; }
+}
+async function enhanceChecklistIA(){
+  const tema=$('edTema').value.trim(); if(!tema)return toast('Preencha o tema primeiro','err');
+  toast('🤖 IA analisando relevância diagnóstica…');
+  try{
+    const txt=await callAI(`Para a estação OSCE/Revalida "${tema}" (${bpVal('edAreaBP')}), liste 10-14 itens de checklist no padrão INEP cobrindo os elementos mais relevantes para o diagnóstico e conduta (prática canônica + diretrizes + cobranças recentes do INEP). Formato: um por linha "pontos | descrição", total ~15-20 pontos, sem markdown.`);
+    $('edChk').value=txt.split('\n').filter(l=>l.includes('|')).join('\n'); toast('Checklist enriquecido por IA ✨','ok');
+  }catch(e){toast('IA falhou: '+e.message,'err')}
+}
+
+/* ---------- PACIENTE VIRTUAL IA (modo IA da sala) ---------- */
+let iaConvo=[];
+function startIAInRoom(r){
+  const st=allStations().find(s=>s.id===r.stationId); if(!st)return;
+  iaConvo=[{role:'system',content:`Você é um paciente simulado em uma estação do Revalida: "${st.tema}" (${st.area}). Responda APENAS ao que o médico perguntar, com linguagem leiga, com base em: ${st.avaliador}. Nunca entregue o diagnóstico espontaneamente. Se o médico encerrar, dê feedback breve.`}];
+  $('roomIAFeed').innerHTML=`<div class="msg them"><span class="who">🤖 Paciente IA</span>Olá, doutor(a). Pode começar quando quiser.</div>`;
+}
+async function sendRoomIA(){
+  const t=$('roomIAInput').value.trim(); if(!t)return; $('roomIAInput').value='';
+  const feed=$('roomIAFeed');
+  feed.innerHTML+=`<div class="msg me">${esc(t)}</div>`; iaConvo.push({role:'user',content:t}); feed.scrollTop=feed.scrollHeight;
+  try{
+    const rep=await chatAI(iaConvo);
+    iaConvo.push({role:'assistant',content:rep});
+    feed.innerHTML+=`<div class="msg them"><span class="who">🤖 Paciente IA</span>${esc(rep)}</div>`; feed.scrollTop=feed.scrollHeight;
+    if(state.speakOn)speak(rep);
+  }catch(e){feed.innerHTML+=`<div class="msg them">[erro IA: ${esc(e.message)}]</div>`}
+}
+async function feedbackIA(){
+  const s=state.currentStation; if(!s)return;
+  const chk=s.checklist.map((c,i)=>`${i+1}. (${c.pts}p) ${c.text}`).join('\n');
+  const tr=iaConvo.filter(m=>m.role!=='system').map(m=>`${m.role==='user'?'MÉDICO':'PACIENTE'}: ${m.content}`).join('\n');
+  $('roomIAFeed').innerHTML+=`<div class="msg them"><span class="who">🤖</span>⏳ Gerando feedback contra o checklist oficial…</div>`;
+  try{
+    const fb=await callAI(`Avalie a performance do médico contra o checklist oficial da estação "${s.tema}". Retorne: 1) cada item com ✓/✗ e justificativa; 2) pontuação total e %; 3) pontos fortes; 4) pontos a melhorar; 5) resposta ideal resumida.\n\nCHECKLIST:\n${chk}\n\nTRANSCRIÇÃO:\n${tr}`);
+    $('roomIAFeed').innerHTML+=`<div class="msg them"><span class="who">🤖 Avaliador IA</span>${esc(fb)}</div>`;
+  }catch(e){toast(e.message,'err')}
+}
+function speak(t){if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';speechSynthesis.speak(u)}
+function toggleSpeak(){ state.speakOn=!state.speakOn; if(!state.speakOn&&window.speechSynthesis) speechSynthesis.cancel();
+  $('speakBtn').textContent='🔊 Voz do paciente: '+(state.speakOn?'ON':'OFF'); }
+/* ditado por voz no chat do paciente IA */
+let dictRec=null;
+function toggleDictation(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return toast('Reconhecimento de voz não suportado — use Chrome/Edge','err');
+  if(dictRec){ try{dictRec.stop()}catch(e){} dictRec=null; return; }
+  dictRec=new SR(); dictRec.lang='pt-BR'; dictRec.interimResults=false;
+  dictRec.onresult=e=>{ $('roomIAInput').value+=' '+e.results[0][0].transcript.trim(); };
+  dictRec.onend=()=>{ dictRec=null; };
+  try{ dictRec.start(); toast('🎙 Ditando… fale e o texto aparece no campo','ok'); }catch(e){ dictRec=null; }
+}
+
+
+/* ---------- EDITOR / IMPORT (admin) ---------- */
+let editingId=null;
+function editStation(id){const s=allStations().find(x=>x.id===id); if(s)openEditor(s)}
+function openEditor(s){
+  if(!isAdmin())return toast('Somente administradores','err');
+  editingId=s?.id||null;
+  boxPick('edAreaBP',[{v:'CM',l:'CM'},{v:'CIR',l:'CIR'},{v:'GO',l:'GO'},{v:'PED',l:'PED'},{v:'MFC',l:'MFC'}],s?.area||'CM');
+  boxPick('edProcBP',[{v:'Não marcado',l:'Não procedimento'},{v:'Marcado',l:'🔧 Procedimento'}],s?.procedimento||'Não marcado');
+  boxPick('edDidBP',[{v:'Não marcada',l:'Regular'},{v:'Marcada',l:'📚 Didática'}],s?.didatica||'Não marcada');
+  $('edEsp').value=s?.especialidade||''; $('edTema').value=s?.tema||''; $('edAno').value=s?.ano||''; $('edEdicao').value=s?.edicao||'';
+  $('edDur').value=s?.duracao||10; $('edInstr').value=s?.instrucoes||''; $('edAval').value=s?.avaliador||''; $('edExames').value=s?.exames||'';
+  $('edChk').value=(s?.checklist||[]).map(c=>`${c.pts} | ${c.text}`).join('\n');
+  openModal('editModal');
+}
+async function saveManual(){
+  const chk=$('edChk').value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const[p,...t]=l.split('|');return{pts:parseInt(p)||1,text:t.join('|').trim()}});
+  const obj={id:editingId||uid('cst'),area:bpVal('edAreaBP'),especialidade:$('edEsp').value,tema:$('edTema').value,
+    identificacao:$('edAno').value?('INEP '+($('edEdicao').value||$('edAno').value)):'Não informada',ano:$('edAno').value,edicao:$('edEdicao').value,
+    procedimento:bpVal('edProcBP'),didatica:bpVal('edDidBP'),duracao:parseInt($('edDur').value)||10,access:0,
+    instrucoes:$('edInstr').value,avaliador:$('edAval').value,exames:$('edExames').value,checklist:chk};
+  const bi=state.stations.findIndex(x=>x.id===editingId);
+  if(bi>=0){ state.stations[bi]=obj; renderAll(); closeModal('editModal'); toast('Estação base atualizada 💾','ok'); return; }
+  try{
+    await api('stations',{station:obj}); await pullStations();
+    renderAll(); closeModal('editModal'); toast('Estação salva no servidor 💾','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+function importXlsx(ev){
+  const f=ev.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    const wb=XLSX.read(e.target.result,{type:'binary'});
+    const sheet=wb.Sheets['Estações']||wb.Sheets[wb.SheetNames[1]]||wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+    const news=[];
+    rows.forEach(r=>{
+      const area=(r['Área']||r['Area']||'').toString().trim().toUpperCase();
+      const tema=(r['Tema / estação']||r['Tema']||'').toString().trim();
+      if(!area||!tema)return;
+      if(allStations().find(s=>s.tema===tema&&s.area===area))return;
+      const st=seed(area,r['Especialidade']||'',tema,r['Identificação INEP']||'Não informada',r['Ano INEP']||'',r['Edição INEP']||'',
+        (r['Procedimento (marcação)']||'').toString().includes('Marc'),(r['Estação didática (marcação)']||'').toString().includes('Marc'));
+      st.duracao=parseInt(r['Duração (min)'])||10; st.id=uid('imp');
+      news.push(st);
+    });
+    if(news.length){ try{ await api('stations',{stations:news}); await pullStations(); }catch(e){ toast(e.message,'err'); } }
+    renderAll();
+    $('importMsg').textContent=`✅ Importadas ${news.length} estações. Total: ${allStations().length}.`;
+    toast(news.length+' estações importadas 📥','ok');
+  };
+  r.readAsBinaryString(f);
+}
+function exportJSON(){const blob=new Blob([JSON.stringify(state.customStations,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='estacoes_praticaM3D.json';a.click()}
+async function importJSON(ev){
+  const f=ev.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    try{ const arr=JSON.parse(e.target.result);
+      await api('stations',{stations:arr}); await pullStations(); renderAll(); toast('Importado ✅','ok');
+    }catch(x){toast('JSON inválido ou erro no servidor','err')}
+  };
+  r.readAsText(f);
+}
+
+/* ---------- GESTÃO DE USUÁRIOS (admin/root) ---------- */
+function renderAdminUsers(){
+  $('adminUsers').innerHTML=state.users.map(u=>`
+    <div class="user-chip" style="width:100%;justify-content:space-between;border-radius:14px">
+      <span style="display:flex;align-items:center;gap:8px"><span class="uav" style="background:var(--violet)">${esc(u.name[0].toUpperCase())}</span>
+      <span>${esc(u.name)} <span class="small">${esc(u.email)}</span></span>
+      <span class="role-pill ${u.role==='root'?'root':u.role==='admin'?'admin':'medico'}">${u.role.toUpperCase()}</span></span>
+      <span>${isRoot()&&u.role==='user'?`<button class="violet" style="padding:5px 10px;font-size:11px" onclick="makeAdmin('${esc(u.email)}')">Tornar admin</button>`:''}
+      ${isRoot()&&u.role==='admin'?`<button class="ghost" style="padding:5px 10px;font-size:11px" onclick="revokeAdmin('${esc(u.email)}')">Revogar</button>`:''}
+      ${u.role==='user'?`<button class="danger" style="padding:5px 10px;font-size:11px" onclick="delUser('${esc(u.email)}')">🗑</button>`:''}</span>
+    </div>`).join('');
+}
+async function makeAdmin(email){ if(!isRoot())return;
+  try{ await api('set_role',{email,role:'admin'}); await pullUsers(); renderAdminUsers(); toast(email+' agora é administrador 👑','ok'); }catch(e){ toast(e.message,'err'); } }
+async function revokeAdmin(email){ if(!isRoot())return;
+  try{ await api('set_role',{email,role:'user'}); await pullUsers(); renderAdminUsers(); toast('Privilégio revogado','ok'); }catch(e){ toast(e.message,'err'); } }
+async function delUser(email){ if(!isAdmin())return; if(!confirm('Remover usuário '+email+'?'))return;
+  try{ await api('del_user',{email}); await pullUsers(); renderAdminUsers(); renderUsers(); toast('Usuário removido','ok'); }catch(e){ toast(e.message,'err'); } }
+
+/* ---------- CONVITES (link / WhatsApp / agregar membros) ---------- */
+function roomLink(r){ return location.origin+location.pathname+'?sala='+(r.code||''); }
+function showShareModal(roomId){
+  const r=roomId?state.rooms.find(x=>x.id===roomId):currentRoomObj(); if(!r) return;
+  $('shareLink').value=roomLink(r);
+  $('shareWa').onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(
+    `Venha treinar comigo no pratica.M3D! 🩺 Sala "${r.name}" — entre pelo link: ${roomLink(r)}`),'_blank');
+  openModal('shareModal');
+}
+function copyShareLink(){
+  $('shareLink').select();
+  try{ navigator.clipboard.writeText($('shareLink').value); }catch(e){ document.execCommand('copy'); }
+  toast('Link copiado! 📋','ok');
+}
+function checkJoinLink(){
+  const code=new URLSearchParams(location.search).get('sala');
+  if(!code) return;
+  if(state.user) joinRoomByCode(code);
+  else { sessionStorage.setItem('pm3d_join',code);
+    toast('Você foi convidado(a) para uma sala! Faça login ou cadastre-se para entrar 🚪','ok'); }
+}
+async function joinRoomByCode(code){
+  try{
+    const j=await api('room_join',{code});
+    const rs=await api('rooms'); state.rooms=rs.rooms||[]; renderRoomList();
+    enterRoom(j.room.id); toast('Você entrou na sala! 🎉','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+function openInviteModal(){
+  const on=onlineSet();
+  $('inviteMembers').innerHTML=state.users
+    .filter(u=>u.email!==state.user.email&&u.email!==ROOT_EMAIL)
+    .sort((a,b)=>(on.has(b.email)?1:0)-(on.has(a.email)?1:0))
+    .map(u=>`<div class="member-card" data-e="${esc(u.email)}" onclick="this.classList.toggle('sel')">${on.has(u.email)?'🟢':'⚪'} ${esc(u.name)}<div class="small">${esc(u.email)}</div></div>`).join('')
+    ||'<span class="small">Nenhum outro usuário cadastrado ainda.</span>';
+  openModal('inviteModal');
+}
+async function confirmInvite(){
+  const r=currentRoomObj(); if(!r) return;
+  const sel=[...document.querySelectorAll('#inviteMembers .member-card.sel')].map(x=>x.dataset.e);
+  closeModal('inviteModal');
+  if(!sel.length) return;
+  try{
+    await api('room_members_add',{id:r.id,members:sel});
+    sel.forEach(e=>{ if(!r.members.includes(e)) r.members.push(e); });
+    toast('Participantes agregados à sala 👥','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ---------- CARDS COMPARTILHÁVEIS ---------- */
+function currentCards(){ return state.roomCards; }
+function renderCards(){
+  const el=$('cardsList'); if(!el) return;
+  const cs=currentCards().filter(c=>!c.stationId||c.stationId===state.currentStation?.id);
+  el.innerHTML=cs.length? cs.map(c=>`<div class="card-chip"><b>${esc((CARD_CATS.find(x=>x.v===c.cat)||{}).l||'🎯 Geral')}</b> ${esc(c.text)}<div class="small">por ${esc(c.by||'')} · ${new Date(c.ts||Date.now()).toLocaleTimeString('pt-BR')}</div></div>`).join('')
+    : '<span class="small">Nenhum card ainda — avaliador/chefe podem enviar dicas ao candidato em tempo real.</span>';
+}
+function openCardModal(){
+  boxPick('cardCatBP',CARD_CATS.map(c=>({v:c.v,l:c.l})),'geral');
+  $('cardText').value=''; openModal('cardModal');
+}
+function sendCard(){
+  const text=$('cardText').value.trim(); if(!text) return toast('Escreva o texto do card','err');
+  const card={cid:uid('ev'),cat:bpVal('cardCatBP'),text,
+    stationId:state.currentStation?.id||null,stationTema:state.currentStation?.tema||''};
+  if(!state.roomCards.find(c=>c.cid===card.cid)){ card.by=state.user.name; card.ts=Date.now(); state.roomCards.push(card); renderCards(); }
+  socket?.emit('card',{room:state.currentRoom,...card});
+  closeModal('cardModal'); toast('Card compartilhado com a sala 🃏','ok');
+}
+
+/* ---------- VIDEOCHAMADA WebRTC MESH (sinalização Socket.io) ---------- */
+const RTC_CFG={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
+const peers={}; let localStream=null, screenOn=false, micOn=true, camOn=true, inCall=false, manualN=0;
+function sigSend(kind,payload,dst){
+  if(!state.currentRoom||!socket?.connected) return;
+  socket.emit('signal',{room:state.currentRoom,kind,payload,dst:dst||null});
+}
+async function handleSig(s){
+  try{
+    if(s.src===state.user?.email) return;
+    if(s.kind==='hello'){ if(inCall){ makePeer(s.src,s.name); makeOffer(s.src); } }
+    else if(s.kind==='offer'){ const P=makePeer(s.src,s.name);
+      await P.pc.setRemoteDescription(s.payload.sdp);
+      const a=await P.pc.createAnswer(); await P.pc.setLocalDescription(a);
+      sigSend('answer',{sdp:P.pc.localDescription},s.src); }
+    else if(s.kind==='answer'){ const P=peers[s.src]; if(P) await P.pc.setRemoteDescription(s.payload.sdp); }
+    else if(s.kind==='ice'){ const P=peers[s.src]; if(P&&s.payload?.cand) await P.pc.addIceCandidate(s.payload.cand).catch(()=>{}); }
+    else if(s.kind==='bye'){ dropPeer(s.src); }
+  }catch(e){}
+}
+function makePeer(remote,label){
+  if(peers[remote]) return peers[remote];
+  const pc=new RTCPeerConnection(RTC_CFG);
+  const P={pc,label:label||remote}; peers[remote]=P;
+  if(localStream) localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  else{ try{ pc.addTransceiver('video',{direction:'recvonly'}); pc.addTransceiver('audio',{direction:'recvonly'}); }catch(e){} }
+  pc.onicecandidate=e=>{ if(e.candidate) sigSend('ice',{cand:e.candidate},remote); };
+  pc.ontrack=e=>attachTile(remote,P.label,e.streams[0],false);
+  pc.onconnectionstatechange=()=>{ if(['failed','disconnected','closed'].includes(pc.connectionState)) dropPeer(remote); };
+  return P;
+}
+async function makeOffer(dst){
+  const P=makePeer(dst); try{ const o=await P.pc.createOffer(); await P.pc.setLocalDescription(o);
+    sigSend('offer',{sdp:P.pc.localDescription},dst); }catch(e){}
+}
+function attachTile(id,label,stream,local){
+  let t=$('tile-'+CSS.escape(id));
+  if(!t){ const g=$('rtcGrid'); if(!g) return;
+    g.insertAdjacentHTML('beforeend',`<div class="rtc-tile ${local?'local':''}" id="tile-${esc(id)}"><video autoplay playsinline ${local?'muted':''}></video><span class="lb">${local?'🙋 Você':'🎥 '+esc(label)}</span></div>`);
+    t=$('tile-'+CSS.escape(id)); }
+  const v=t.querySelector('video'); if(v.srcObject!==stream) v.srcObject=stream;
+}
+function dropPeer(id){ const P=peers[id]; if(P){ try{P.pc.close()}catch(e){} delete peers[id]; }
+  const t=$('tile-'+CSS.escape(id)); if(t) t.remove(); }
+function rtcStatus(t){ const el=$('rtcStatus'); if(el) el.textContent=t; }
+async function rtcJoin(){
+  if(inCall) return toast('Você já está na chamada 📹','ok');
+  try{ localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true}); }
+  catch(e){ try{ localStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      toast('Sem câmera — entrando só com áudio 🎤','err'); }
+    catch(e2){ localStream=null; toast('Sem mídia — você assiste a chamada (recv-only) 👀','err'); } }
+  inCall=true; micOn=camOn=true;
+  if(localStream) attachTile(state.user.email,'',localStream,true);
+  rtcStatus('conectando…');
+  sigSend('hello',{name:state.user.name,role:state.myRoomRole});
+  rtcStatus(Object.keys(peers).length?'na chamada ✅':'aguardando participantes…');
+  setTimeout(()=>rtcStatus(Object.keys(peers).length?'na chamada ✅':'aguardando participantes…'),3000);
+}
+function rtcLeave(silent){
+  if(!inCall&&!Object.keys(peers).length) return;
+  if(!silent) sigSend('bye',{});
+  else if(socket?.connected) sigSend('bye',{});
+  inCall=false;
+  Object.keys(peers).forEach(dropPeer);
+  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  if(state.user){ const t=$('tile-'+CSS.escape(state.user.email)); if(t) t.remove(); }
+  screenOn=false; rtcStatus('chamada encerrada');
+}
+function rtcMic(){ if(!localStream) return; micOn=!micOn;
+  localStream.getAudioTracks().forEach(t=>t.enabled=micOn); toast(micOn?'🎤 Microfone ligado':'🎤 Microfone mudo'); }
+function rtcCam(){ if(!localStream) return; camOn=!camOn;
+  localStream.getVideoTracks().forEach(t=>t.enabled=camOn); toast(camOn?'📷 Câmera ligada':'📷 Câmera desligada'); }
+async function rtcScreen(){
+  if(!inCall) return toast('Entre na chamada primeiro 📹','err');
+  try{
+    if(!screenOn){ const scr=await navigator.mediaDevices.getDisplayMedia({video:true});
+      const tr=scr.getVideoTracks()[0];
+      Object.values(peers).forEach(P=>{ const s=P.pc.getSenders().find(x=>x.track&&x.track.kind==='video'); if(s) s.replaceTrack(tr); });
+      const lt=$('tile-'+CSS.escape(state.user.email))?.querySelector('video'); if(lt) lt.srcObject=scr;
+      tr.onended=()=>rtcScreen(); screenOn=true; toast('🖥 Compartilhando tela');
+    } else { const cam=localStream?.getVideoTracks()[0]; if(cam){
+        Object.values(peers).forEach(P=>{ const s=P.pc.getSenders().find(x=>x.track&&x.track.kind==='video'); if(s) s.replaceTrack(cam); });
+        const lt=$('tile-'+CSS.escape(state.user.email))?.querySelector('video'); if(lt) lt.srcObject=localStream; }
+      screenOn=false; toast('🖥 Compartilhamento encerrado'); }
+  }catch(e){ toast('Não foi possível compartilhar a tela','err'); }
+}
+/* sinalização manual (copiar/colar SDP) — fallback P2P */
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const b64d=s=>{ s=(s||'').trim(); try{ return JSON.parse(decodeURIComponent(escape(atob(s)))); }catch(e){ return JSON.parse(s); } };
+const waitIce=pc=>pc.iceGatheringState==='complete'?Promise.resolve():
+  new Promise(res=>{ const t=setTimeout(res,4000);
+    pc.addEventListener('icegatheringstatechange',()=>{ if(pc.iceGatheringState==='complete'){ clearTimeout(t); res(); } }); });
+async function manualOffer(){
+  const key='manual-'+(++manualN); const P=makePeer(key,'colega (manual)');
+  const o=await P.pc.createOffer(); await P.pc.setLocalDescription(o); await waitIce(P.pc);
+  $('sigOut').value=b64e({key,sdp:P.pc.localDescription});
+  toast('Oferta gerada! Envie o bloco ao colega e cole a resposta dele aqui 📋','ok');
+}
+async function manualHandle(){
+  try{ const bl=b64d($('sigIn').value);
+    if(bl.sdp?.type==='offer'){ const key=bl.key||('manual-'+(++manualN)); const P=makePeer(key,'colega (manual)');
+      await P.pc.setRemoteDescription(bl.sdp);
+      const a=await P.pc.createAnswer(); await P.pc.setLocalDescription(a); await waitIce(P.pc);
+      $('sigOut').value=b64e({key,sdp:P.pc.localDescription});
+      toast('Resposta gerada! Devolva o bloco a quem enviou a oferta 📋','ok');
+    } else if(bl.sdp?.type==='answer'){ const P=peers[bl.key]||peers['manual-'+manualN];
+      if(!P) throw new Error('nenhuma oferta aguardando resposta');
+      await P.pc.setRemoteDescription(bl.sdp); inCall=true;
+      toast('Conectado por sinalização manual ✅','ok'); closeModal('sigModal');
+    } else throw new Error('bloco não reconhecido');
+  }catch(e){ toast('Bloco inválido: '+e.message,'err'); }
+}
+
+/* ---------- CONFIG / PERFIL ---------- */
+async function saveProfile(){
+  const n=$('cfgName').value.trim(); if(!n)return;
+  state.user.name=n; $('userName').textContent=n; $('avatar').textContent=n[0].toUpperCase();
+  toast('Perfil salvo localmente (o nome de cadastro permanece no servidor)','ok');
+}
+
+/* ---------- MODAL ---------- */
+function openModal(id){$(id).classList.remove('hidden')}
+function closeModal(id){$(id).classList.add('hidden')}
+
+/* ---------- TOUR passo a passo ---------- */
+const tourSteps=[
+  {sel:'.brand',t:'Bem-vindo(a) ao pratica.M3D! 🎉',d:'Sua plataforma de treino OSCE/Revalida em estações colaborativas — agora com servidor Node.js, tempo real via WebSocket e videochamada P2P. Vamos conhecer o essencial em poucos passos.'},
+  {sel:'#kpiStations',t:'Dashboard 📊',d:'Acompanhe KPIs, gráficos de desempenho por grande área (CM, CIR, GO, PED, MFC) e sua nota média geral em rosca.'},
+  {sel:'#usersCard',t:'Usuários 👥',d:'Veja quem está online agora (bolinha verde pulsante) em tempo real, via Socket.io.'},
+  {sel:'#roomsCard',t:'Salas / Estações 🚪',d:'Entre em salas abertas ou crie a sua (obrigatório escolher ≥1 estação). Compartilhe o link de convite pelo WhatsApp 🟢 — quem recebe entra direto, mesmo em salas fechadas. Criar sala nova encerra a sua anterior (admins podem manter várias).'},
+  {sel:'.nav button[data-view="estacoes"]',t:'Catálogo de Estações 📚',d:'Estações com checklists no padrão INEP. Filtre por grande área usando as caixas coloridas e busque por tema/especialidade.'},
+  {sel:'#lobbyCard',t:'Chat público 💬',d:'Converse com todos no lobby em tempo real — e cada sala tem seu próprio chat privado com reações de emoji.'},
+  {sel:'.nav button[data-view="gestao"]',t:'Gestão (admin) 🔒',d:'Importar Excel INEP, criar estações com IA e gerenciar usuários: só administradores. O root (senha @0Arcano) promove novos admins.'},
+];
+let tourIdx=0;
+function startTour(){tourIdx=0;$('tourOverlay').classList.remove('hidden');showTourStep()}
+function endTour(){ $('tourOverlay').classList.add('hidden'); localStorage.setItem('praticaM3D_toured','1'); }
+function showTourStep(){
+  const st=tourSteps[tourIdx];
+  document.querySelectorAll('.nav button[data-admin]').forEach(b=>{ if(!isAdmin()) b.classList.add('hidden'); });
+  const target=document.querySelector(st.sel);
+  const hole=$('tourHole'), card=$('tourCard');
+  if(st.sel.includes('gestao')&&!isAdmin()){ tourIdx++; if(tourIdx>=tourSteps.length)return endTour(); return showTourStep(); }
+  if(target){
+    const r=target.getBoundingClientRect(); const pad=8;
+    hole.style.left=(r.left-pad)+'px'; hole.style.top=(r.top-pad)+'px';
+    hole.style.width=(r.width+pad*2)+'px'; hole.style.height=(r.height+pad*2)+'px';
+    const below=r.bottom+16+220<innerHeight;
+    card.style.top=below?(r.bottom+16)+'px':Math.max(12,r.top-240)+'px';
+    card.style.left=Math.min(Math.max(12,r.left),innerWidth-360)+'px';
+  } else { hole.style.width='0'; hole.style.height='0'; hole.style.left='50%'; hole.style.top='40%'; card.style.top='45%'; card.style.left='calc(50% - 170px)'; }
+  $('tourStepN').textContent=`PASSO ${tourIdx+1} DE ${tourSteps.length}`;
+  $('tourTitle').textContent=st.t; $('tourDesc').textContent=st.d;
+  $('tourNext').textContent=tourIdx===tourSteps.length-1?'Concluir 🎉':'Próximo ➜';
+}
+function tourNext(){ tourIdx++; if(tourIdx>=tourSteps.length)endTour(); else showTourStep(); }
+
+/* ---------- BOOT ---------- */
+(async function boot(){
+  const b=$('bubbles'); const cols=['#5eead4','#fbbf24','#fb7185','#8b5cf6','#38bdf8','#a3e635'];
+  for(let i=0;i<14;i++){const s=20+Math.random()*80,el=document.createElement('i');
+    el.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;top:${Math.random()*100}%;background:${cols[i%6]};animation-delay:${-Math.random()*14}s;animation-duration:${10+Math.random()*10}s`;b.appendChild(el);}
+  $('logoAuth').innerHTML=LOGO_SVG; $('logoTop').innerHTML=LOGO_SVG;
+  document.querySelectorAll('.auth-tabs button').forEach(b2=>b2.onclick=()=>{
+    document.querySelectorAll('.auth-tabs button').forEach(x=>x.classList.remove('active'));
+    b2.classList.add('active');
+    ['login','register','forgot'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b2.dataset.tab));
+  });
+  /* sessão persistente: token Bearer de 30 dias */
+  if(state.token){
+    try{
+      const j=await api('me',null,'GET');
+      state.user=j.user;
+      await enterApp();
+      return;
+    }catch(e){ localStorage.removeItem('pm3d_token'); state.token=null; }
+  }
+  checkJoinLink();
+})();
+</script>
+</body>
+</html>
+
