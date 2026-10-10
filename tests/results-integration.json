@@ -1,0 +1,210 @@
+{
+  "suite": "Integração HTTP/Socket.io/SQLite",
+  "passed": 50,
+  "results": [
+    {
+      "name": "Seed contém exatamente 428 estações",
+      "status": "PASS"
+    },
+    {
+      "name": "SQLite WAL e senhas bcrypt no backend",
+      "status": "PASS"
+    },
+    {
+      "name": "Sessão limitada a 30 dias",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário sem acesso administrativo",
+      "status": "PASS"
+    },
+    {
+      "name": "Sala sem estação rejeitada",
+      "status": "PASS"
+    },
+    {
+      "name": "Sala privada invisível para não convidado",
+      "status": "PASS"
+    },
+    {
+      "name": "Socket bloqueia entrada em sala privada",
+      "status": "PASS"
+    },
+    {
+      "name": "Presença multiusuário sem erro de contador",
+      "status": "PASS"
+    },
+    {
+      "name": "Candidato recebe somente dados permitidos",
+      "status": "PASS"
+    },
+    {
+      "name": "Roteiro do ator reservado ao papel atribuído",
+      "status": "PASS"
+    },
+    {
+      "name": "Checklist indisponível ao observador durante estação",
+      "status": "PASS"
+    },
+    {
+      "name": "Catálogo secundário não vaza roteiro",
+      "status": "PASS"
+    },
+    {
+      "name": "Candidato não pode se promover a avaliador",
+      "status": "PASS"
+    },
+    {
+      "name": "Candidato não inicia cronômetro",
+      "status": "PASS"
+    },
+    {
+      "name": "Socket.io sincroniza timer sem HTTP polling",
+      "status": "PASS"
+    },
+    {
+      "name": "Pausa/retomada mantém tempo oficial",
+      "status": "PASS"
+    },
+    {
+      "name": "Troca rejeita estação não selecionada",
+      "status": "PASS"
+    },
+    {
+      "name": "Troca via socket não divulga roteiro",
+      "status": "PASS"
+    },
+    {
+      "name": "Observador não pontua",
+      "status": "PASS"
+    },
+    {
+      "name": "Ator não pontua",
+      "status": "PASS"
+    },
+    {
+      "name": "Avaliador sincroniza checklist",
+      "status": "PASS"
+    },
+    {
+      "name": "Item de checklist fora do intervalo rejeitado",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat oculto é entregue apenas a observadores",
+      "status": "PASS"
+    },
+    {
+      "name": "Histórico do chat oculto protegido ao reconectar candidato",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat privado não é transmitido aos demais",
+      "status": "PASS"
+    },
+    {
+      "name": "Lobby público em canal e arquivo por hora",
+      "status": "PASS"
+    },
+    {
+      "name": "Sinalização dirigida para peer preparado",
+      "status": "PASS"
+    },
+    {
+      "name": "Gravação requer consentimento de todos presentes",
+      "status": "PASS"
+    },
+    {
+      "name": "Transcrição identifica fala e papel no servidor",
+      "status": "PASS"
+    },
+    {
+      "name": "Fechamento de PEP humano calcula nota real",
+      "status": "PASS"
+    },
+    {
+      "name": "Encerrar estação revela chat e mantém timer em zero",
+      "status": "PASS"
+    },
+    {
+      "name": "Somente candidato/avaliador/admin acessam PEP individual",
+      "status": "PASS"
+    },
+    {
+      "name": "SRS deriva lacunas e registra desempenho",
+      "status": "PASS"
+    },
+    {
+      "name": "Perfil e dashboard persistidos no SQLite",
+      "status": "PASS"
+    },
+    {
+      "name": "Conta mestre não pode ser excluída nem rebaixada",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário comum não promove administradores",
+      "status": "PASS"
+    },
+    {
+      "name": "Gerador e teste IA protegidos por RBAC",
+      "status": "PASS"
+    },
+    {
+      "name": "Sem credenciais IA não é marcada disponível",
+      "status": "PASS"
+    },
+    {
+      "name": "Sem Agora retorna indisponível, não sucesso falso",
+      "status": "PASS"
+    },
+    {
+      "name": "JSON/XLSX exportam as estações após encerrar",
+      "status": "PASS"
+    },
+    {
+      "name": "Planilha enviada importa 428 linhas sem apagar roteiros",
+      "status": "PASS"
+    },
+    {
+      "name": "Exportação XLSX preserva pesos ao reimportar",
+      "status": "PASS"
+    },
+    {
+      "name": "Importação JSON administrativa preserva pesos",
+      "status": "PASS"
+    },
+    {
+      "name": "Exames são liberados explicitamente ao candidato",
+      "status": "PASS"
+    },
+    {
+      "name": "Modo estudo não permite cronômetro nem pontuação",
+      "status": "PASS"
+    },
+    {
+      "name": "Nova sala encerra anterior para usuário comum",
+      "status": "PASS"
+    },
+    {
+      "name": "Sala IA não atribui nota sem transcrição",
+      "status": "PASS"
+    },
+    {
+      "name": "Recuperação por token é de uso único e revoga sessões",
+      "status": "PASS"
+    },
+    {
+      "name": "Mais de 40% anulados congela estação para auditoria",
+      "status": "PASS"
+    },
+    {
+      "name": "Origem externa não permitida bloqueada",
+      "status": "PASS"
+    }
+  ],
+  "limitations": [
+    "Não testa credenciais reais de IA/SMTP/Agora.",
+    "Não comprova desempenho em redes externas nem validação clínica."
+  ]
+}

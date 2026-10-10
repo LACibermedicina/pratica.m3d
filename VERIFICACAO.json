@@ -1,0 +1,209 @@
+{
+  "version": "6.2.0",
+  "date": "2026-10-10",
+  "scope": "Consolidação da versão Node; não altera a versão standalone enviada.",
+  "tests": {
+    "Integração HTTP/Socket.io/SQLite": 50,
+    "Chromium headless — 3 contextos isolados": 17,
+    "Contratos IA com provedores simulados locais": 6
+  },
+  "total_checks": 73,
+  "stations": {
+    "count": 428,
+    "areas": {
+      "CIR": 74,
+      "CM": 123,
+      "GO": 68,
+      "MFC": 76,
+      "PED": 87
+    },
+    "declared_year_count": 105,
+    "with_exams": 0
+  },
+  "npm_audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "status": "Versão candidata validada localmente; não é certificação de produção ou conformidade clínica/WCAG/LGPD.",
+  "rules": {
+    "dispute_freeze": "Mais de 40% dos critérios totais anulados em revisão humana; não contestações rejeitadas.",
+    "mesh": "Até 6 recomendado por padrão; capacidade real depende da rede e dispositivos."
+  },
+  "matrix": [
+    {
+      "module": "Identidade",
+      "feature": "Cadastro, login, bcrypt e Bearer até 30 dias",
+      "status": "Testado localmente",
+      "evidence_or_limit": "50 verificações de integração cobrem autenticação e RBAC. Recuperação SMTP só funciona com serviço configurado."
+    },
+    {
+      "module": "Identidade",
+      "feature": "Recuperação de senha por token de 30 min, hash, uso único e revogação",
+      "status": "Token testado; SMTP pendente",
+      "evidence_or_limit": "Token de desenvolvimento não é retornado em produção. SMTP não homologado com destinatário real."
+    },
+    {
+      "module": "Identidade",
+      "feature": "Root protegido; promoção/revogação; perfil/emoji",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Root padrão é somente para desenvolvimento; produção recusa a senha pública. Exclusão de root bloqueada."
+    },
+    {
+      "module": "Identidade",
+      "feature": "Dashboard arrastável, minimizável, ocultável, persistente e botões ↑/↓",
+      "status": "Implementado e parcialmente testado em navegador",
+      "evidence_or_limit": "Persistência, perfil e minimização testados. Auditoria completa WCAG 2.1 não realizada."
+    },
+    {
+      "module": "Vídeo",
+      "feature": "WebRTC mesh, STUN, mídia multiparte e limpeza de listeners/tracks",
+      "status": "Testado com 3 navegadores",
+      "evidence_or_limit": "Chromium headless com dispositivos de mídia sintetizados, no mesmo ambiente. Não é teste de dispositivos físicos ou NAT externo."
+    },
+    {
+      "module": "Vídeo",
+      "feature": "Microfone/câmera e seleção de dispositivos",
+      "status": "Testado em navegador local",
+      "evidence_or_limit": "Câmera, microfone e enumeração/troca do microfone cobertos. Testes entre modelos físicos e navegadores ainda necessários."
+    },
+    {
+      "module": "Vídeo",
+      "feature": "Compartilhamento de tela com replaceTrack",
+      "status": "Implementado; homologação pendente",
+      "evidence_or_limit": "Depende de gesto do usuário, navegador/HTTPS e teste real. Não houve seleção de tela física no teste."
+    },
+    {
+      "module": "Vídeo",
+      "feature": "Watchdog por peer, TURN opcional, Agora com token oficial e renovação",
+      "status": "Implementado; credenciais e redes pendentes",
+      "evidence_or_limit": "SDK original 4.21.0 preservado. Token via agora-token oficial. Não foi executada chamada real Agora. Mesh recomenda até 6 participantes, configurável; acima disso solicita Agora."
+    },
+    {
+      "module": "Vídeo",
+      "feature": "Socket.io via WebSocket, sem HTTP polling da SPA",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Socket.io não é Server-Sent Events (SSE). Não são tratados como protocolos equivalentes."
+    },
+    {
+      "module": "Vídeo",
+      "feature": "Fallback SDP manual sem sinalização servidor/STUN",
+      "status": "Testado entre 2 peers no mesmo ambiente",
+      "evidence_or_limit": "Mídia local inicia mesmo com API inacessível. Oferta/resposta conecta sem socket/STUN no teste. Não garante 100% offline nem conexão entre NATs arbitrários; precisa de rede compatível e canal de troca de SDP."
+    },
+    {
+      "module": "Comunicação",
+      "feature": "Lobby público arquivado por hora; chats sala/privado/observadores",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Histórico de observadores é protegido durante a estação e revelado após encerramento. Arquivo e auditoria administrativa ficam no servidor."
+    },
+    {
+      "module": "OSCE",
+      "feature": "Exigência de estação, multi-seleção, sala aberta/fechada, convites e sala única",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Nova sala encerra anterior de usuário comum; admins/root podem criar múltiplas. Sala privada exige convite, não só conhecimento do código."
+    },
+    {
+      "module": "OSCE",
+      "feature": "Papéis candidato, avaliador, ator e observador com dados filtrados no backend",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Criador atribui papéis. Usuário não se autopromove. Bloqueio de script/checklist também nas rotas secundárias de catálogo durante estação."
+    },
+    {
+      "module": "OSCE",
+      "feature": "Timer backend: início, pausa, retomada, reset, alertas e encerramento",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Controles, sincronização e zero após encerramento cobertos. Alertas 3 min/1 min/beep implementados; percepção sonora humana não homologada."
+    },
+    {
+      "module": "OSCE",
+      "feature": "Exames estruturados e liberação individual; modo estudo",
+      "status": "Regras testadas; conteúdo dependente de anexos",
+      "evidence_or_limit": "Galeria não inventa exames. O seed tem 0 estações com exames não vazios. ECG/RX/TC/RM/USG precisam de anexos clínicos reais/licenciados."
+    },
+    {
+      "module": "OSCE",
+      "feature": "PEP manual com pesos e progresso; justificativas/evidências; impressão PDF",
+      "status": "PEP testado; impressão implementada",
+      "evidence_or_limit": "O botão usa o diálogo de impressão do navegador para salvar PDF, não um serviço de PDF no backend. Tempo acumulado deriva dos PEPs concluídos, não de toda atividade na plataforma."
+    },
+    {
+      "module": "OSCE",
+      "feature": "Contestação item a item e congelamento após >40% de anulações",
+      "status": "Testado localmente",
+      "evidence_or_limit": "Aplicado para PEP sem avaliador humano. Mais de 40% dos critérios totais anulados congela estação; exatamente 40% não congela. Não confundir com percentual de contestações rejeitadas. Parecer IA não anula sozinho; resolução é administrativa."
+    },
+    {
+      "module": "IA",
+      "feature": "Gemini → OpenAI → Pollinations, proxy, logs e teste por provedor",
+      "status": "Contratos testados com fixtures; serviço real pendente",
+      "evidence_or_limit": "Chaves não embutidas. Provedor não configurado é pulado. JSON inválido tenta próximo. Defaults de modelos atualizados pela documentação consultada; verificar conta e disponibilidade no painel."
+    },
+    {
+      "module": "IA",
+      "feature": "Paciente virtual restrito ao roteiro, pt-BR e reconhecimento de fala",
+      "status": "Implementado; voz/modelo real pendentes",
+      "evidence_or_limit": "Paciente é instruído a não inventar dados nem revelar roteiro; isso não é garantia contra prompt injection. SpeechRecognition tem disponibilidade limitada e pode usar serviço externo do navegador."
+    },
+    {
+      "module": "IA",
+      "feature": "Gravação local, consentimento, transcrição por falante e correção áudio",
+      "status": "Gravação testada; correção em fixtures",
+      "evidence_or_limit": "Gravador mistura streams presentes ao iniciar, não inclui automaticamente novos streams. Áudio é baixado no navegador, não enviado automaticamente. Cada candidato/ator transcreve sua própria fala. Não é diarização automática universal de arquivo de áudio."
+    },
+    {
+      "module": "IA",
+      "feature": "Validação de citação e origem da fala na correção",
+      "status": "6 verificações com provedores locais simulados",
+      "evidence_or_limit": "Fala do ator e citação inexistente não pontuam; nota não é inventada quando a resposta é incompleta. Não houve avaliação de qualidade clínica com modelo real."
+    },
+    {
+      "module": "IA",
+      "feature": "Geração de estações e coach de 7 dias",
+      "status": "Implementado; provedores reais pendentes",
+      "evidence_or_limit": "Novas estações são rascunhos educacionais não validados. Prompt não comprova aderência estrita INEP/SUS/MS/RN/OMS. Revisão por médico e referências oficiais é obrigatória antes de publicação."
+    },
+    {
+      "module": "Estudo",
+      "feature": "SRS 1/3/7/15/30, cartões por lacunas, atalhos e estação associada",
+      "status": "Núcleo testado; interação implementada",
+      "evidence_or_limit": "Histórico de revisão em analytics; atalhos 1–4 e espaço não conflitam com navegação global. Flowcard XABCDE genérico não substitui protocolo específico de cada doença."
+    },
+    {
+      "module": "Catálogo",
+      "feature": "428 estações, áreas/cores, ano/prova e importação JSON/XLSX",
+      "status": "Testado com a planilha enviada",
+      "evidence_or_limit": "428 linhas vinculadas por ID rev-. 105 registros têm Ano INEP declarado na planilha; isso não verifica autenticidade da prova. Importação parcial preserva roteiro e checklist; XLSX round-trip preserva pesos."
+    },
+    {
+      "module": "Relatórios",
+      "feature": "KPIs, barras por área, rosca, auditoria e métricas globais",
+      "status": "Núcleo testado; apresentação implementada",
+      "evidence_or_limit": "Não usa números ilustrativos. Estado sem dados exibe 0. Chats são auditáveis por administradores; não usar dados de pacientes reais."
+    },
+    {
+      "module": "Infraestrutura",
+      "feature": "Node/Express, SQLite WAL, Socket.io, SPA/Tailwind sem build",
+      "status": "Testado em Node 22",
+      "evidence_or_limit": "Não foi feito deploy no domínio m3d.pro. HTTPS, proxy WebSocket, cotas, backup/restore, LGPD, proteção distribuída e teste de carga ainda são requisitos operacionais."
+    },
+    {
+      "module": "Marca",
+      "feature": "pratica.M3D endossada por m3d.pro, símbolo médico 3D existente",
+      "status": "Aplicado à interface",
+      "evidence_or_limit": "Reproposta de arquitetura de marca e assinatura; o símbolo original foi preservado. Não foi criado um símbolo novo nem aplicada identidade oficial adicional de m3d.pro, pois não foi fornecido um brand kit."
+    }
+  ],
+  "sources": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols",
+    "https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition",
+    "https://www.agora.io/en/blog/how-to-build-a-token-server-for-agora-applications-using-nodejs/",
+    "https://api-ref.agora.io/en/video-sdk/web/4.x/interfaces/ilocalaudiotrack.html",
+    "https://ai.google.dev/gemini-api/docs/models",
+    "https://ai.google.dev/gemini-api/docs/deprecations",
+    "https://gen.pollinations.ai/docs"
+  ]
+}

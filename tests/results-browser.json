@@ -1,0 +1,78 @@
+{
+  "suite": "Chromium headless — 3 contextos isolados",
+  "passed": 17,
+  "results": [
+    {
+      "name": "SPA inicia com autenticação e dashboard real",
+      "status": "PASS"
+    },
+    {
+      "name": "Layout acessível minimiza e persiste no servidor",
+      "status": "PASS"
+    },
+    {
+      "name": "Perfil customizável com emoji e edição real",
+      "status": "PASS"
+    },
+    {
+      "name": "Todas as 428 estações disponíveis para seleção",
+      "status": "PASS"
+    },
+    {
+      "name": "Papéis dirigem layout sem roteiro do ator no candidato",
+      "status": "PASS"
+    },
+    {
+      "name": "Videochamada WebRTC mesh com três usuários e mídia real sintetizada",
+      "status": "PASS"
+    },
+    {
+      "name": "Microfone e câmera podem ser desligados/reativados",
+      "status": "PASS"
+    },
+    {
+      "name": "Seleção de dispositivos acessível na chamada",
+      "status": "PASS"
+    },
+    {
+      "name": "Timer sincronizado visualmente entre três navegadores",
+      "status": "PASS"
+    },
+    {
+      "name": "Chat oculto reservado ao observador no navegador",
+      "status": "PASS"
+    },
+    {
+      "name": "Gravador local produz download após consentimento coletivo",
+      "status": "PASS"
+    },
+    {
+      "name": "Encerramento revela notas e preserva canais por papel",
+      "status": "PASS"
+    },
+    {
+      "name": "Saída encerra tracks e remove tiles remotos",
+      "status": "PASS"
+    },
+    {
+      "name": "Navegação encerra câmera e evita vazamento de recursos",
+      "status": "PASS"
+    },
+    {
+      "name": "SDP manual prepara mídia mesmo sem API de sinalização",
+      "status": "PASS"
+    },
+    {
+      "name": "Oferta/resposta SDP conecta dois peers sem socket ou STUN",
+      "status": "PASS"
+    },
+    {
+      "name": "Sem erros JavaScript não tratados na SPA",
+      "status": "PASS"
+    }
+  ],
+  "limitations": [
+    "Mídia de câmera/microfone sintetizada pelo navegador de testes.",
+    "Compartilhamento de tela, SpeechRecognition, Agora, SMTP e redes NAT externas exigem homologação real."
+  ]
+}

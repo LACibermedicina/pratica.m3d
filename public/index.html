@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>pratica.M3D | m3d.pro — Treino OSCE / Revalida</title>
+<meta name="description" content="Plataforma de treino OSCE/Revalida: videochamada com failsafe Agora, PEP com correção por IA e disputa, SRS e cards de procedimento."/>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<script src="/vendor/tailwind.js"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { teal1:'#0d9488', teal2:'#14b8a6', teal3:'#5eead4', teal4:'#2dd4bf', deep:'#0f766e',
+      coral:'#fb7185', amberx:'#fbbf24', violetx:'#8b5cf6', skyx:'#38bdf8', limex:'#a3e635',
+      ink:'#134e4a', mut:'#5b7d78', line:'#ccfbf1' },
+    fontFamily: { round: ["ui-rounded","Segoe UI","system-ui","sans-serif"] },
+    boxShadow: { soft:'0 10px 30px rgba(13,148,136,.14)', glow:'0 0 0 4px rgba(45,212,191,.2)' }
+  } } };
+</script>
+<link rel="stylesheet" href="/app.css?v=6.1"/>
+<script src="/socket.io/socket.io.js" defer></script>
+<script type="module" src="/js/app.js?v=6.2"></script>
+</head>
+<body class="font-round text-ink">
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<header class="topbar" role="banner">
+  <div class="flex items-center gap-3">
+    <span id="logo-slot" aria-hidden="true"></span>
+    <div>
+      <div class="text-[19px] font-black leading-none text-deep">pratica<span class="text-teal1">.M3D</span></div>
+      <div class="text-[10px] font-black tracking-[0.2em] text-mut">OSCE · REVALIDA · m3d.pro</div>
+    </div>
+  </div>
+  <nav id="nav" class="hidden md:flex items-center gap-1" aria-label="Principal"></nav>
+  <div class="flex items-center gap-2">
+    <span id="conn-badge" class="badge" role="status" aria-live="polite">offline</span>
+    <div id="user-chip" class="hidden items-center gap-2"></div>
+  </div>
+</header>
+
+<main id="main" class="mx-auto max-w-[1500px] px-4 py-5" tabindex="-1">
+
+  <!-- ============================ AUTENTICAÇÃO ============================ -->
+  <section id="view-auth" class="hidden" aria-labelledby="auth-title">
+    <div class="grid gap-5 lg:grid-cols-[1.05fr_1fr] items-stretch">
+      <div class="card hero-card">
+        <div class="flex items-center gap-4">
+          <span id="logo-hero"></span>
+          <div>
+            <div id="auth-title" class="text-[30px] font-black leading-none text-deep">pratica<span class="text-teal1">.M3D</span></div>
+            <div class="text-[12px] font-black tracking-[0.18em] text-mut">SIMULAÇÃO OSCE · REVALIDA</div>
+          </div>
+        </div>
+        <p class="mt-4 text-[14.5px] leading-relaxed">
+          Treine estações reais em <b>videochamada</b> (WebRTC P2P com <b>failsafe automático Agora</b>),
+          correção de PEP por <b>IA</b> com cadeia de failsafe, desempenho por grande área e
+          <b>cards de procedimento com fluxograma</b> — sem dados ilustrativos falsos.
+        </p>
+        <div class="mt-5 grid sm:grid-cols-3 gap-3" id="auth-stats"></div>
+      </div>
+      <div class="card">
+        <div class="tabs" role="tablist" aria-label="Acesso">
+          <button class="tab active" id="tab-login" role="tab" aria-selected="true">Entrar</button>
+          <button class="tab" id="tab-register" role="tab" aria-selected="false">Criar conta</button>
+        </div>
+        <form id="form-login" class="mt-4 space-y-3" novalidate>
+          <label class="fld">Usuário ou e-mail
+            <input name="login" required autocomplete="username" class="inp" placeholder="root"/>
+          </label>
+          <label class="fld">Senha
+            <input name="password" type="password" required autocomplete="current-password" class="inp" placeholder="••••••"/>
+          </label>
+          <button class="btn-primary w-full" type="submit">Entrar</button>
+        </form>
+        <form id="form-register" class="mt-4 space-y-3 hidden" novalidate>
+          <label class="fld">Nome completo
+            <input name="name" required autocomplete="name" class="inp"/>
+          </label>
+          <label class="fld">E-mail
+            <input name="email" type="email" required autocomplete="email" class="inp"/>
+          </label>
+          <label class="fld">Senha (mín. 4)
+            <input name="password" type="password" required minlength="4" autocomplete="new-password" class="inp"/>
+          </label>
+          <button class="btn-primary w-full" type="submit">Criar conta</button>
+        </form>
+        <p id="auth-msg" class="mt-3 text-[13px] text-coral font-bold" role="alert"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ APP ================================= -->
+  <section id="view-app" class="hidden">
+    <div id="panel-dash" class="panel"></div>
+    <div id="panel-rooms" class="panel hidden"></div>
+    <div id="panel-room" class="panel hidden"></div>
+    <div id="panel-catalog" class="panel hidden"></div>
+    <div id="panel-srs" class="panel hidden"></div>
+    <div id="panel-cards" class="panel hidden"></div>
+    <div id="panel-peps" class="panel hidden"></div>
+    <div id="panel-analytics" class="panel hidden"></div>
+    <div id="panel-profile" class="panel hidden"></div>
+    <div id="panel-admin" class="panel hidden"></div>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
