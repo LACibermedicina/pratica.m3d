@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Revalida Prático",
+    "slug": "revalida-pratico",
+    "version": "1.0.0",
+    "orientation": "default",
+    "ios": {
+      "bundleIdentifier": "pro.m3d.revalida",
+      "infoPlist": {
+        "NSCameraUsageDescription": "A câmera é usada para a videochamada da estação.",
+        "NSMicrophoneUsageDescription": "O microfone é usado para a videochamada da estação."
+      }
+    },
+    "android": { "package": "pro.m3d.revalida", "permissions": ["CAMERA", "RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS", "INTERNET"] }
+  }
+}

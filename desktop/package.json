@@ -1,0 +1,19 @@
+{
+  "name": "revalida-pratico-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.mjs",
+    "dist": "electron-builder"
+  },
+  "devDependencies": { "electron": "^31.0.0", "electron-builder": "^24.13.3" },
+  "build": {
+    "appId": "pro.m3d.revalida",
+    "productName": "Revalida Prático",
+    "files": ["main.js", "preload.cjs", "config.html", "src-servidor.js"],
+    "win": { "target": "nsis" }, "mac": { "target": "dmg" }, "linux": { "target": "AppImage" }
+  }
+}
